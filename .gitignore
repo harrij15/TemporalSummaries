@@ -102,3 +102,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# SPADE
+*.ascii
+*.conf
+*.data
+*.tpose
+*.idx
+*.out
+
+#Misc
+*.docx
+*.pyc
