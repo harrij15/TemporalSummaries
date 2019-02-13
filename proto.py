@@ -20,14 +20,23 @@ if __name__ == "__main__":
     import string
     import time
     
+    attributes = ["Stock Market Data","Step Counts","Heart Rate","ActivFit","Calorie Intake"]    
     
-    attr_index = -2
+    # Input parameters
+    attr_index = 1 # Chooses the attribute in attributes list
     age = 22
     activity_level = "active"   
-    #tw = 7
-    attributes = ["Stock Market Data","Step Counts","Heart Rate","ActivFit","Calorie Intake"]
-    attr = attributes[attr_index]
+    alpha_size = 5    
     
+    # Parameters for SPADE
+    min_conf = 0.5    
+    min_sup = 0.15
+    path = "C:/Users/harrij15/Documents/GitHub/RPI-HEALS//" # Path for pattern data
+    cygwin_path = r"C:\Apps\cygwin64\bin" # Path to Cygwin
+    
+    attr = attributes[attr_index]
+        
+    # Based on the attribute, choose data and time window
     if attr == "Stock Market Data":
         df_index = 1
         tw = 7
@@ -41,6 +50,7 @@ if __name__ == "__main__":
         df_index = 106
         tw = 7
         
+    # Choose string for time window based on tw
     if tw == 365:
         TW = "years"
     elif tw == 30:
@@ -50,26 +60,26 @@ if __name__ == "__main__":
     elif tw == 1:
         TW = "days"    
     
+    # Retrieve data
     df_list = get_data_list([df_index],attr) 
     
-    # TODO: Modify this to handle multiple time series
     data = df_list[0]
     db_fn_prefix = "series_db_" + str(df_index)
-    alpha_size = 5
     alphabet = string.ascii_lowercase
-    path = "C:\Users\harrij15\Documents\GitHub\RPI-HEALS\\"
-    cygwin_path = r"C:\Apps\cygwin64\bin"
-    #n = 10000 
-    n = 1
-    
+    singular_TW = TW[:-1]
+
+    # Construct mapping from letters in alphabet to integers (starting at 1)
     letter_map = dict()  
     for i in range(alpha_size):
         letter_map[alphabet[i]] = i+1
         
+    # Counter for number of summaries produced
     proto_cnt = 0
         
     full_sax_rep = ''
-    if attr == "ActivFit":
+    if attr == "ActivFit": # Categorical activity data
+        
+        # Gather data
         attr = "Activity"
         activities = data[["ActivFit"]]
         dates = data[["date"]]
@@ -77,9 +87,12 @@ if __name__ == "__main__":
         activities = activities.values.tolist()
         dates = dates.values.tolist()
         
+        # Construct mapping from date to sequence of letters
         data_dict = dict()
         for i in range(len(activities)):
             letter = None
+            
+            # Construct alphabet for data
             if activities[i][0] == "walking":
                 letter = "w"
             elif activities[i][0] == "still":
@@ -96,54 +109,51 @@ if __name__ == "__main__":
                 data_dict[date] += letter
                 
     else:
-        
+        # SAX representation at daily granularity (sub-time window assumed to be days)
         full_sax_rep = ts_to_string(znorm(np.array(data)), cuts_for_asize(alpha_size))
-        print full_sax_rep
-        print len(full_sax_rep)
                 
-        # Summaries for the past full week
-        week_sax = ts_to_string(paa(znorm(np.array(data)),int(len(data)/tw)), cuts_for_asize(alpha_size))
-        print week_sax
-        #print cuts_for_asize(alpha_size)
-        #print paa(znorm(np.array(data)),int(len(data)/tw))
+        # SAX representation at time window granularity
+        tw_sax = ts_to_string(paa(znorm(np.array(data)),int(len(data)/tw)), cuts_for_asize(alpha_size))
 
-        past_week_letter = week_sax[-1]
-        prev_week_letter = week_sax[-2]
-        other_week_letter = week_sax[len(week_sax)/2]
-        prev_start_day = tw*(len(week_sax)-2)
-        start_day = tw*(len(week_sax)-1)
-        end_day = tw*len(week_sax)
-        #print start_day,end_day
-        past_week = data[start_day:end_day]
-        #raw_input(full_sax_rep[start_day:end_day])
+        # Focus on past tw along with previous tw's
+        past_tw_letter = tw_sax[-1]
+        prev_tw_letter = tw_sax[-2]
+        other_tw_letter = tw_sax[len(tw_sax)/2]
         
-        #Overall week summary (week granularity)
-        summarizer_type = "Weekly " + attr
-        week_summary, week_summarizer = get_single_SAX_summary(summarizer_type,attr,past_week_letter,letter_map,alpha_size)
-        #t2 = time.time()
-        print "Overall week summary (week granularity):", week_summary
-        #print "Time taken: ", float(t2 - t1)/n
-        print    
-        proto_cnt += 1
+        # Get indices for days at beginning and end of tw's
+        prev_start_day = tw*(len(tw_sax)-2)
+        start_day = tw*(len(tw_sax)-1)
+        end_day = tw*len(tw_sax)
         
-        # Overall week summary (week granularity) - for Heart Rate comparison
+        past_tw = data[start_day:end_day]
+        
+        # Overall TW summary (TW granularity) - for Heart Rate comparison
         if attr == "Heart Rate":
-            summarizer_type = "Weekly " + attr
+            first = singular_TW.capitalize() + "ly "
+            summarizer_type = first + attr
         
-            hr = sum(past_week)/tw
+            # Calculate average heart rate
+            hr = sum(past_tw)/tw
             
-            
-            summary = HR_Summary(hr,age,activity_level)
-            print "Overall week summary (week granularity) - Heart Rate:", summary
+            summary = HR_Summary(hr,age,activity_level,singular_TW)
+            print "Overall" + singular_TW + " summary (" + first.lower() + "granularity):", summary
             print    
-            proto_cnt += 1    
+            proto_cnt += 1  
+        else:
+            # Overall TW summary (TW granularity)
+            first = singular_TW.capitalize() + "ly "
+            summarizer_type = first + attr
+            tw_summary, tw_summarizer = get_single_SAX_summary(summarizer_type,attr,past_tw_letter,letter_map,alpha_size,singular_TW)
+            print "Overall " + singular_TW + " summary (" + first.lower() + "granularity):", tw_summary
+            print    
+            proto_cnt += 1  
     
-    
-    # Overall week summary (day granularity)
+    # Overall TW summary (sTW granularity)
     summarizers = ["very low","low","moderate","high","very high"]
     summary = None
-    summarizer_type = "Past Daily Week - " + attr 
-    if attr == "Activity":
+    summarizer_type = "Past Daily TW - " + attr 
+    
+    if attr == "Activity": # Get SAX for previous day granularity
         day_list = sorted(data_dict.keys())
         prev_day = day_list[-1]
         day_sax = data_dict[prev_day]
@@ -154,57 +164,62 @@ if __name__ == "__main__":
         summary_data = full_sax_rep[start_day:end_day]
         x_vals = "days"
         
-    t1_list, quantifier_list, summary_list = generate_summaries(summarizers,summarizer_type,attr,summary_data,letter_map,alpha_size,TW=TW,xval=x_vals) 
-    if quantifier_list != None:
-        summary = summary_list[best_quantifier_index(quantifier_list,t1_list)]
-        truth = max(t1_list)
-    
-    if summary != None:
-        print "Overall week summary (day granularity):", summary
-        print "Truth value:", truth
-        #print summary_list, t1_list
-        print        
-        proto_cnt += 1
-        
     # Overall week summary (day granularity) - Heart Rate
     if attr == "Heart Rate":
         hr_summarizers = ["abnormally low","low","within range","high","abnormally high"]
         summary = None
 
-        summarizer_type = "Past Daily Week - " + attr        
+        summarizer_type = "Past Daily TW - " + attr        
         t1_list, quantifier_list, summary_list = generate_summaries(hr_summarizers,summarizer_type,attr,data[start_day:end_day],letter_map,alpha_size,TW=TW,xval=x_vals) 
         if quantifier_list != None:
             summary = summary_list[best_quantifier_index(quantifier_list,t1_list)]
             truth = max(t1_list)
             
         if summary != None:
-            print "Overall week summary (day granularity) - Heart Rate:", summary
-            #print "Truth value:", truth
-            print        
-            proto_cnt += 1    
+            print "Overall week summary (daily granularity):", summary
+            print     
+            proto_cnt += 1  
+    else:
+        t1_list, quantifier_list, summary_list = generate_summaries(summarizers,summarizer_type,attr,summary_data,letter_map,alpha_size,TW=TW,xval=x_vals) 
+        
+        if quantifier_list != None:
+            summary = summary_list[best_quantifier_index(quantifier_list,t1_list)]
+            truth = max(t1_list)
+        
+        if summary != None:
+            print "Overall week summary (daily granularity):", summary
+            print "Truth value:", truth
+            print     
+            proto_cnt += 1  
     
+    # Comparison summary
     if attr != "Heart Rate" and attr != "Activity":
-        # Standard comparison summary
+
+        # Standard comparison summary for previous week and week before it
         summarizer_type = "Weekly " + attr
-        comparison_summary = comparison_SAX_summary(summarizer_type,attr,prev_week_letter,past_week_letter)
+        comparison_summary = comparison_SAX_summary(summarizer_type,attr,prev_tw_letter,past_tw_letter)
         if comparison_summary != None:
-            print "Standard comparison summary (day granularity):", comparison_summary
-            print    
-            proto_cnt += 1
+            print "Standard comparison summary (daily granularity):", comparison_summary
+            print  
+            proto_cnt += 1  
             
-        comparison_summary = comparison_SAX_summary(summarizer_type,attr,other_week_letter,past_week_letter,other_week_index=len(week_sax)/2,tw=7)
+        # Standard comparison summary for previous week and another week
+        comparison_summary = comparison_SAX_summary(summarizer_type,attr,other_tw_letter,past_tw_letter,other_week_index=len(tw_sax)/2,tw=7)
         if comparison_summary != None:
-            print "Standard comparison summary (day granularity):", comparison_summary
-            print    
-            proto_cnt += 1        
+            print "Standard comparison summary (daily granularity):", comparison_summary
+            print  
+            proto_cnt += 1  
+
     elif attr == "Heart Rate":
         # Standard comparison summary - Heart Rate            
-        comparison_summary = comparison_HR_summary(data[prev_start_day:start_day],data[start_day:end_day],age,activity_level)
+        comparison_summary = comparison_HR_summary(data[prev_start_day:start_day],data[start_day:end_day],age,activity_level,singular_TW)
         if comparison_summary != None:
-            print "Standard comparison summary (day granularity) - Heart Rate:", comparison_summary
+            print "Standard comparison summary (daily granularity) - Heart Rate:", comparison_summary
             print    
-            proto_cnt += 1        
+            proto_cnt += 1  
+
     elif attr == "Activity":
+        
         # Standard comparison summary - Activity
         other_day = data_dict[day_list[0]]
         prev_day = data_dict[day_list[-2]]
@@ -212,21 +227,19 @@ if __name__ == "__main__":
         
         comparison_summary = comparison_activ(prev_day,curr_day)
         if comparison_summary != None:
-            print "Standard comparison summary (day granularity) - Activity:", comparison_summary
+            print "Standard comparison summary (daily granularity) - Activity:", comparison_summary
             print    
             proto_cnt += 1      
             
         comparison_summary = comparison_activ(other_day,curr_day,other_index=0)
         if comparison_summary != None:
-            print "Standard comparison summary (day granularity) - Activity:", comparison_summary
+            print "Standard comparison summary (daily granularity) - Activity:", comparison_summary
             print    
             proto_cnt += 1          
     
         
-    # Simple goal summary
-    stepcounts_daylist = [395,94,2953,10048,552,1098,31,3173,2673,2443,733,1388,238,828,0,1128,14,1363,0,282]    
+    # Goal evaluation summary
     guideline_summarizers = ["reached","did not reach"]
-
     t1_list, quantifier_list, summary_list = generate_summaries(guideline_summarizers,attr,attr,data,letter_map,alpha_size)
     if quantifier_list != None:
         goal_summary = summary_list[best_quantifier_index(quantifier_list,t1_list)]
@@ -235,22 +248,27 @@ if __name__ == "__main__":
         goal_summary = ""
     
     if len(goal_summary) != 0:
-        print "Simple goal summary:", goal_summary
+        print "Goal evaluation summary:", goal_summary
         print "Truth value:", truth
-        print
-        proto_cnt += 1
-    
+        print    
+        proto_cnt += 1  
     
     # Standard trend summary
     if attr == "Activity":
+        
+        # Different approach for categorical data
         trend_list = []
         lim = len(data_dict.keys())-1
+        
+        # Walking -> active; else -> not active
         for i in range(len(sorted(data_dict.keys()))-1):
             key = data_dict.keys()[i]
             next_key = data_dict.keys()[i+1]
             
+            # Compare active counts
             trend_list.append(data_dict[key].count("w") - data_dict[next_key].count("w"))            
     else:
+        # Get differences between days
         trend_list = pd.DataFrame(data).diff().values.T.tolist() 
         trend_list = trend_list[0]    
         
@@ -263,15 +281,20 @@ if __name__ == "__main__":
     print "Standard trend summary:", trend_summary   
     print "Truth value:", truth
     print
-    proto_cnt += 1
+    proto_cnt += 1  
         
     # Pattern recognition summary
     if attr != "Activity":
-        week_comparisons = find_similar_weeks(data,week_sax)
-        #print week_comparisons
+        
+        tw_comparisons, indices = find_similar_tw(data,tw_sax)
+        
+        # If comparisons are found, clusters visualized as different colors on raw data
+        if len(tw_comparisons) > 0:
+            display_clusters(data,indices)
+            
         pattern_summarizers = ["rose","dropped","stayed the same"]
         summarizer_type = "Pattern Recognition - " + attr
-        t1_list, quantifier_list, summary_list = generate_summaries(pattern_summarizers,summarizer_type,attr,week_comparisons,letter_map,alpha_size)
+        t1_list, quantifier_list, summary_list = generate_summaries(pattern_summarizers,summarizer_type,attr,tw_comparisons,letter_map,alpha_size)
         if summary_list != None:
             pattern_summary = summary_list[best_quantifier_index(quantifier_list,t1_list)]
             truth = max(t1_list)
@@ -282,9 +305,11 @@ if __name__ == "__main__":
         if summary_list != None:
             proto_cnt += 1
              
-    # Output pattern summaries from cSPADE
+    # Output pattern summaries from SPADE algorithm
     if attr == "Heart Rate":
         hr_sax = ""
+        
+        # Create s representation for heart rate
         for i in range(len(data)):
             summarizer = hr_evaluation(data[i], age, activity_level)
             if summarizer == "abnormally low":
@@ -305,10 +330,7 @@ if __name__ == "__main__":
                       "b" : 5}
         
         hr_alphabet = "alwhb"
-        print "SPADE Patterns - Heart Rate:"
-        num_proto = analyze_patterns(attr,hr_sax,hr_alphabet,hr_letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,proto_cnt,flag_="HR")
-        print
-        
+        summary_list, num_proto = analyze_patterns(attr,hr_sax,hr_alphabet,hr_letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,flag_="HR")        
     elif attr == "Activity":
         activ_letter_map = {
             "w" : 1,
@@ -317,13 +339,12 @@ if __name__ == "__main__":
         }
         
         activ_alphabet = "wsv"
-        print "SPADE Patterns - Activity:"
-        num_proto = analyze_patterns(attr,day_sax,activ_alphabet,activ_letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,proto_cnt,flag_="HR")
-        print      
+        summary_list, num_proto = analyze_patterns(attr,day_sax,activ_alphabet,activ_letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,flag_="HR")
     else:
-        print "SPADE Patterns:"
-        num_proto = analyze_patterns(attr,full_sax_rep,alphabet,letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,proto_cnt)
+        summary_list, num_proto = analyze_patterns(attr,full_sax_rep,alphabet,letter_map,tw,alpha_size,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt)
+        
+    for i in range(len(summary_list)):
+        print summary_list[i]
     
     print
     print "Number of summaries produced:", num_proto
-    #print '\a'

@@ -1,70 +1,5 @@
 """ 
-Alternative approach:
-
-From "Fuzzy linguistic summaries of databases for an
-efficient business data analysis and decision support" paper
-
-V is a quality (attribute) of interest -> step counts
-Y = {y1,...,yN} is a set of objects (records) that manifest quality V,
-e.g., the set of days; hence V(yi) are values of quality V for object yi
-D = {V(y1),...,V(yN)} is a set of data ("database") -> set of step counts
-
-A summary of a data set consists of:
-- A summarizer S (e.g. "enough steps in a day" vs "not enough steps")
-- a quantity in agreement Q (e.g. "most")
-- truth (validity) T, e.g., T(On most days, you reached the American Heart Assocation's recommended number of 10,000 steps per day.)
-
-For summarizer S in terms of step counts, it would only be "enough steps in a day"
-if the day's step count is at or over 10,000 steps. Otherwise, it would be 
-"not enough steps in a day". The 10,000 benchmark would make the quantity absolute,
-as opposed to relative.
-
-More complicated summaries include combinations of attributes using a hierarchy or
-other methods (unsure how this would apply to step counts but it could be useful 
-when looking at multiple attributes such as the response to "How am I doing?")
-
-For "Qy's are F", Q is a linguistic quantifier, y is a member of Y (the set of 
-days), and F is a property (e.g., passing, in terms of step count)
-
-In the case where Q = "most", muQ(x) will be 1 if x is greater than half of the number of days in the time window (TW) or muQ(x) will be 0 otherwise. 
-
-muF(yi) will be 1 if day yi has a step count at or over 10,000 steps. It will be
-0 otherwise. Thus, truth(Qy's are F) = muQ((1/n)*sum_i=1...n(muF(yi))). In other
-words, there will be a sum of 1's and 0's pertaining to the days in the TW that
-will be averaged. The average will then be inputted as x into the muQ membership
-function.
-
-muWg is for the membership function value of the query, basically measuring how
-well the data matches the query. This is compared to the muS because the summary
-may be stating facts about data that is less relevant to the query.
-==================================================
-Set time window (TW)
-Go through data in time window and fill database 
-
-Database contains:
-Number of "good" days in TW
-Average step count over TW
-Best/Worst day or outliers (boxplot?)
-
-
-Set step_quantifier based on data
-
-
-"On most days in the past [specified time window (last week is default)],
-you [step_quantifier] the American Heart Assocation's recommended number of 
-10,000 steps per day."
-
-Other ideas:
-- Based on user's performance, you can add suggestions to help increase step count
-or ask what happened
-     - Add suggestions only if the user is continuing to struggle with step counts
-     - Ask what happened if the user is not performing as well as previous TWs
-- Compare with other TWs
-
-Or do all of this and rank the results to see which ones are more interesting
-or helpful
-
-Citation:
+Citation for saxpy:
  Senin, P., Lin, J., Wang, X., Oates, T., Gandhi, S., Boedihardjo, A.P., Chen, C., Frankenstein, S., Lerner, M., GrammarViz 2.0: a tool for grammar-based pattern discovery in time series, ECML/PKDD Conference, 2014.
 """
 
@@ -75,9 +10,24 @@ from saxpy.sax import sax_via_window
 import subprocess
 import matplotlib.pyplot as plt
 from datetime import datetime
+import numpy as np
 ####### GENERAL SUMMARY FUNCTIONS #######
 
 def get_protoform(summarizer_type,attr,best_quantifier,summarizer,TW="weeks",x_val="days"):
+    """
+    Inputs:
+    - summarizer_type: the type of summarizer
+    - attr: the attribute
+    - best_quantifier: the quantifier chosen for the summarizer
+    - summarizer: the conclusive phrase of a summary
+    - TW: the time window size (default size is a week)
+    - x_val: the x axis of the raw data
+    
+    Outputs the summary chosen
+    
+    Purpose: To gather the information required to fill in the protoforms and output
+    the summaries
+    """
     singular_TW = TW[:-1]
     if summarizer_type == "Step Counts":
         return "On " + str(best_quantifier) + " days in the past " + singular_TW + ", you " + str(summarizer) + " the American Heart Association's recommended number of 10,000 steps per day."        
@@ -87,12 +37,12 @@ def get_protoform(summarizer_type,attr,best_quantifier,summarizer,TW="weeks",x_v
             return "On " + str(best_quantifier) + " days in the past " + singular_TW + ", you " + str(summarizer) + " your goal to stay under 2,000 calories."     
     elif summarizer_type == "Trends":
         return str(best_quantifier).capitalize() + " time, your " + attr.lower() + " " + str(summarizer) + " from one day to the next."
-    elif "Past Daily Week" in summarizer_type:
+    elif "Past Daily TW" in summarizer_type:
         if attr == "Activity":
             return "Over " + str(best_quantifier) + " " + x_val + " in the past " + singular_TW + " have been " + str(summarizer) + "."
         return "Over " + str(best_quantifier) + " " + x_val + " in the past " + singular_TW + ", your " + attr.lower() + " has been " + str(summarizer) + "."
     elif "Pattern Recognition" in summarizer_type:
-        return "When " + str(best_quantifier) + " " + TW + " similar to this past one occurred, your " + attr.lower() + " " + str(summarizer) + " the next " + singular_TW + "."
+        return "During " + str(best_quantifier) + " " + TW + " similar to this past one occurred, your " + attr.lower() + " " + str(summarizer) + " the next " + singular_TW + "."
     else:
         return ""
 
@@ -101,12 +51,18 @@ def generate_summaries(summarizers,summarizer_type,attr,data,letter_map,alpha_si
     Inputs:
     - summarizers: the list of relevant summarizers
     - summarizer_type: the type of summarizer
-    - data: the time series
-    - TW: the time window (default is "the past week"
+    - attr: the attribute
+    - data: the time-series data
+    - letter_map: a mapping from letters to integers
+    - alpha_size: the alphabet size
+    - TW: the time window (default is "the past week")
+    - age: the user's age
+    - activity_level: the user's activity level
+    - xval: the x axis of the raw data
     
     Outputs:
-    - output_list: A list of lists containing the t1 truth values in one list 
-    and the generated summaries in another
+    - output_list: A list of lists containing the t1 truth values in one list, 
+    the generated summaries in another, and the possible quantifiers in a third
     
     Purpose: To generate the summaries based on the inputted summarizers that will
     dictate which quantifiers will be best for the sentence.
@@ -138,6 +94,7 @@ def generate_summaries(summarizers,summarizer_type,attr,data,letter_map,alpha_si
             average += muS
              
         average = float(average)/len(data)
+        
         # Uses the getQForS function to find the best quantifier based on the 
         # inputted proportion of days that have a good step count
         best_quantifier = getQForS(average)
@@ -152,7 +109,6 @@ def generate_summaries(summarizers,summarizer_type,attr,data,letter_map,alpha_si
         if len(summary) == 0:
             return [None,None,None]
         
-        #t1 = zadeh_truth(best_quantifier,average)
         t1 = average
         
         summary_list.append(summary)
@@ -169,6 +125,10 @@ def get_muS(summarizer_type,summarizer,value,letter_map,alpha_size,age=None,acti
     - summarizer_type: the domain of the summarizer we are looking at (e.g., step counts)
     - summarizer: the summarizer
     - value: the value obtained from the database
+    - letter_map: a mapping from letters to integers
+    - alpha_size: the alphabet size
+    - age: the user's age
+    - activity_level: the user's activity level
     
     Outputs: The membership function value of the summarizer based on the
     inputted value and the summarizer type; -1 if summarizer_type is not found
@@ -203,7 +163,9 @@ def get_muS(summarizer_type,summarizer,value,letter_map,alpha_size,age=None,acti
             return int(value < 0)
         else:
             return int(value == 0)
-    elif "Past Daily Week" in summarizer_type:
+    elif "Past Daily TW" in summarizer_type:
+        
+        # Handles unique data
         if "Heart Rate" in summarizer_type:
             return int(hr_evaluation(value,age,activity_level) == summarizer)
         if "Activity" in summarizer_type:
@@ -235,6 +197,7 @@ def getQForS(value):
     
     # Value is expected to be in [0,1]
     # ["all of the","most","more than half of the", "half of the","some of the","none of the"]
+    
     if value == 0:
         return "none of the"
     elif value < 0.2:
@@ -254,17 +217,46 @@ def getQForS(value):
 
 ####### SAX SUMMARY FUNCTIONS #######
 
-def get_single_SAX_summary(summarizer_type,attr,letter,letter_map,alpha_size,flag=None):
+def get_single_SAX_summary(summarizer_type,attr,letter,letter_map,alpha_size,TW):
+    '''
+    Inputs: 
+    - summarizer_type: the domain of the summarizer we are looking at (e.g., step counts)
+    - attr: the attribute
+    - letter: the letter representing the time window
+    - letter_map: a mapping from letters to integers
+    - alpha_size: the alphabet size
+    - TW: the time window size 
+
+    Outputs a summary using a specific protoform for standard evaluation summaries
+    at the TW granularity
+    
+    Purpose: Evaluating a single SAX letter and using it to produce a standard
+    evaluation summary at the TW granularity
+    '''
     conclusion = evaluateSAX(letter,letter_map,alpha_size)
     if attr == "Step Counts":
         attr = "step count"
         
-    return ("In the past week, your " + attr.lower() + " has been " + conclusion + ".", conclusion)
+    return ("In the past " + TW + ", your " + attr.lower() + " has been " + conclusion + ".", conclusion)
     
 def comparison_SAX_summary(summarizer_type,attr,prev_letter,curr_letter,other_week_index=None,tw=None):
+    '''
+    Inputs:
+    - summarizer_type: the domain of the summarizer we are looking at (e.g., step counts)
+    - attr: the attribute
+    - prev_letter: SAX letter representing the TW before the current TW
+    - curr_letter: SAX letter representing the most recent TW
+    - other_week_index: index in the data for other TWs in the data for comparison
+    - tw: the time window size
+    
+    Outputs a comparison summary given the inputs
+    
+    Purpose: used to output comparison summaries
+    '''
     summarizer = None
     goal = None
     
+    # Goals help identify what is "better" or "worse" in terms of comparison for the attribute
     if attr == "Stock" or attr == "Step Counts":    
         goal = "high"
         
@@ -300,6 +292,15 @@ def comparison_SAX_summary(summarizer_type,attr,prev_letter,curr_letter,other_we
 ####### OTHER SAX FUNCTIONS #######
 
 def letter_dist(q_i,c_i):
+    '''
+    Inputs:
+    - q_i: first letter
+    - c_i: second letter
+    
+    Outputs the distance between the two letters
+    
+    Purpose: calculates the distance between the two letters
+    '''
     # Breakpoints for alphabet size=5
     breakpoints = [-0.84,-0.25,0.25,0.84]
     
@@ -323,6 +324,19 @@ def letter_dist(q_i,c_i):
     return lookup_table[letter_map[q_i]][letter_map[c_i]]
 
 def evaluateSAX(letter,letter_map,alpha_size,flag=None):
+    '''
+    Inputs:
+    - letter: the letter representing the time window
+    - letter_map: a mapping from letters to integers
+    - alpha_size: the alphabet size
+    - flag: flag to handle unique data
+    
+    Outputs summarizer that the letter is mapped to
+    
+    Purpose: to convert a letter to a summarizer for evaluation
+    '''
+    # Mappings that enumerate the summarizers used based on alphabet size
+    # Enumeration resembles buckets
     summarizer_5_map = {1 : "very low",
                           2 : "low",
                           3 : "moderate",
@@ -338,6 +352,8 @@ def evaluateSAX(letter,letter_map,alpha_size,flag=None):
                         2 : "high"}    
     
     value = letter_map[letter]
+    
+    # Different mappings for different summarizers
     if flag == "HR":
         summarizer_map = {1 : "abnormally low",
                           2 : "low",
@@ -353,22 +369,20 @@ def evaluateSAX(letter,letter_map,alpha_size,flag=None):
             3 : "in a vehicle"
         }
     
-    # Choose bucket the value fits in
-    
+    # Choose bucket the value fits in 
     summarizer_map = None
     if alpha_size > 1:
         summarizer_map = summarizer_2_map
     if alpha_size > 2:
-            summarizer_map = summarizer_3_map    
+        summarizer_map = summarizer_3_map    
     if alpha_size > 3:
-            summarizer_map = summarizer_5_map    
+        summarizer_map = summarizer_5_map    
             
     bucket_size = alpha_size/len(summarizer_map.keys())
     
-    #print letter, letter_map[letter]
-    #raw_input()
-    
     bucket = int(math.floor(float(value)/float(bucket_size)))
+    
+    # Handle error case
     if bucket == 0:
         bucket = 1
     
@@ -376,6 +390,20 @@ def evaluateSAX(letter,letter_map,alpha_size,flag=None):
     
 
 def best_quantifier_index(quantifiers,truths):
+    '''
+    Inputs:
+    - quantifiers: the possible quantifiers of the summaries generated
+    - truths: the truth values of the summaries
+    
+    Outputs:
+    - index: the index of the best quantifier
+    
+    Purpose: find the best quantifier in order to determine which summary to
+    generate
+    '''
+    
+    # Mapping of possible quantifiers to an enumeration, resembling an order
+    # of importance
     quant_map = {"none of the" : 1,
                  "almost none of the" : 2,
                  "some of the" : 3,
@@ -385,15 +413,16 @@ def best_quantifier_index(quantifiers,truths):
                  "all of the" : 7
                  }
     
+    # Find the values that correspond to the quantifiers in the input list
     values = []
     for i in range(len(quantifiers)):
         values.append(quant_map[quantifiers[i]])
     
     truth = 0
     index = 0
-    #print values
-    #raw_input()
+    
     if values.count(max(values)) > 1:
+        # To handle ties, factor in the truth values
         for i in range(len(values)):
             if values[i] == max(values):
                 if truths[i] > truth:
@@ -402,7 +431,6 @@ def best_quantifier_index(quantifiers,truths):
     else:
         index = values.index(max(values))
                     
-    #raw_input(index)
     return index
 
 ####### SUMMARY EVALUATION FUNCTIONS #######
@@ -488,7 +516,19 @@ def zadeh_truth(quantifier,x):
 
 ####### USER EVALUATION FUNCTIONS #######
 
-def goal_evaluation(goal,values):
+def goal_assistance(goal,values):
+    '''
+    Inputs: 
+    - goal: the goal specified or relevant to the user
+    - values: the values of measures relevant to the goal
+    
+    Outputs:
+    - results: the results of comparing the inputted values to the goal/guideline
+    requirements
+    
+    Purpose: a preliminary implementation of the construction of goal assistance
+    summaries
+    '''
     target_map = None
     if goal == "FSC":
         target_map = {"protein" : 50,
@@ -499,6 +539,8 @@ def goal_evaluation(goal,values):
                           "sodium" : 2.3,
                           "fiber" : 30}        
     
+    # Specify a need for an increase or a decrease when comparing the inputted
+    # values to the goal/guideline
     results = []
     for key in values.keys():
         if key in target_map:
@@ -509,12 +551,33 @@ def goal_evaluation(goal,values):
                 
     return results
 
-def HR_Summary(heart_rate, age, activity_level):
+def HR_Summary(heart_rate, age, activity_level, TW):
+    '''
+    Inputs: 
+    - heart_rate: the user's average heart rate
+    - age: the user's age
+    - activity_level: the user's activity level
+    - TW: the time window (default is "the past week")
+    
+    Outputs a standard evaluation summary for heart rate
+    
+    Purpose: A separate summary generation function for heart rate
+    '''
     conclusion = hr_evaluation(heart_rate, age, activity_level)
-    return "In the past week, your heart rate has been " + conclusion + "."
+    return "In the past " + TW + ", your heart rate has been " + conclusion + "."
 
 def hr_evaluation(heart_rate, age, activity_level):
+    '''
+    Inputs: 
+    - heart_rate: the user's average heart rate
+    - age: the user's age
+    - activity_level: the user's activity level
     
+    Outputs a summarizer for the data based on the inputs
+    
+    Purpose: To retrieve a summarizer for heart rate data, as it relies on a unique 
+    set of summarizers
+    '''
     if age >= 18:
         lower_bound = 60
     else:
@@ -542,14 +605,29 @@ def hr_evaluation(heart_rate, age, activity_level):
         else:
             return "abnormally high"
         
-def comparison_HR_summary(last_week,curr_week,age,activity_level):
+def comparison_HR_summary(last_tw,curr_tw,age,activity_level,TW):
+    '''
+    Inputs:
+    - last_tw: heart rate data for the time window before the past full time window
+    - curr_tw: heart rate data for the past full time window
+    - age: the user's age
+    - activity_level: the user's activity level
+    
+    Outputs a comparison summary using summarizers for the heart rate
+    
+    Purpose: To output a comparison summary for heart rate data, as it relies on a unique 
+    set of summarizers
+    '''
     l_cnt = 0
     c_cnt = 0
     goal = "within range"
-    for i in range(len(last_week)):
-        if hr_evaluation(last_week[i],age,activity_level) == goal:
+    
+    # Count how many times the user is within the goal heart rate range between
+    # the two time windows
+    for i in range(len(last_tw)):
+        if hr_evaluation(last_tw[i],age,activity_level) == goal:
             l_cnt += 1
-        if hr_evaluation(curr_week[i],age,activity_level) == goal:
+        if hr_evaluation(curr_tw[i],age,activity_level) == goal:
             c_cnt += 1    
             
     summarizer = None
@@ -560,9 +638,17 @@ def comparison_HR_summary(last_week,curr_week,age,activity_level):
     else:
         summarizer = "about the same"
         
-    return "You did " + summarizer.lower() + " with keeping your heart rate within range than you did the week before."
+    return "You did " + summarizer.lower() + " with keeping your heart rate within range than you did the " + TW + " before."
+
 
 def categ_eval(letter):
+    '''
+    Inputs a letter for SAX representation
+    
+    Outputs the corresponding activity
+    
+    Purpose: Maps inputted letter to the activity
+    '''
     activity_map = {
         "w" : "walking",
         "s" : "inactive",
@@ -572,6 +658,16 @@ def categ_eval(letter):
     return activity_map[letter]
 
 def comparison_activ(prev_day,curr_day,other_index=None):
+    '''
+    Inputs:
+    - prev_day: data for previous day
+    - curr_data: data for past full day
+    - other_index: data for another day in data (default is None)
+    
+    Outputs a comparison summary for activity between two days
+    
+    Purpose: Outputs a comparison summary for categorical activity data
+    '''
     prev = prev_day.count("w")
     curr = curr_day.count("w")
     
@@ -593,7 +689,19 @@ def comparison_activ(prev_day,curr_day,other_index=None):
 ####### DATA FUNCTIONS #######
 
 def get_data_list(index_list,dataset):
+    '''
+    Inputs:
+    - index_list: list of indices of files to be used in the corresponding 
+    data folder
+    - dataset: the dataset to be used
+    
+    Outputs list of dataframes
+    
+    Purpose: Sets up data for the system
+    '''
     df_list = []
+    
+    # Sets up search for specific csv files in data folder
     if dataset == "Stock Market Data":
         data_folder = "data/Stock Market Data"
         columns = ['Volume','Close','High','Open','Low']
@@ -624,12 +732,13 @@ def get_data_list(index_list,dataset):
         
         df.columns = columns
         if dataset != "ActivFit":
-            if len(days) == 0:
-                days = df['date']
             values = df[column].tolist()
         else:
             days = df['date']
+            
         if column == dataset or column == "calorie":
+            
+            # Take out empty data points in data
             if dataset == "Heart Rate":
                 values = [x for x in values if not math.isnan(x)]
             elif dataset == "Step Counts":
@@ -643,36 +752,49 @@ def get_data_list(index_list,dataset):
         df_list.append(values)  
         
         if dataset == "ActivFit":
+            # Get dates of activity data readings
             ticks = []
             curr_date = None
             values = df[column]
-            #raw_input(days[0])
             for i in range(len(days)):
                 date = datetime.strptime(days[i],"%Y-%m-%d %H:%M:%S")
-                #date = date.strip(" ")
-                #date = date[0]
                 date_str = str(date.month) + "/" + str(date.day) + "/" + str(date.year)
-                #raw_input(date_str)
                 if date_str != curr_date:
                     curr_date = date_str
                     ticks.append(i)
                 
-        #raw_input(values)
-        #print days
-        #raw_input()
-        #if i==0:
-            #fig, ax .= plt.subplots()
-        if dataset == "ActivFit":
+        if i==0 and dataset == "Step Counts":
+            # Present chart of first individual's data for step counts
+            fig, ax = plt.subplots()
+            plt.xlabel("Days")
+            plt.ylabel("Step Counts")
+            plt.title("Step Count Data Snippet (Insight4Wear Dataset)")     
+            ax.axhline(10000,color='r')
+            plt.plot(values,linestyle='-')
+            
+        if i==0 and dataset == "ActivFit":
+            # Present chart for activity data
             plt.xticks(ticks,[x for x in range(len(ticks))])
             plt.plot(values,linestyle='-')
             plt.xlabel("Days")
             plt.ylabel("Activity")
-    
+            
     plt.show()
     return df_list
 
 def create_database(sax,letter_map,tw,alpha_size,prefix):
+    '''
+    Inputs:
+    - sax: SAX representation of data 
+    - letter_map: a mapping from letters to integers
+    - tw: the time window (default is "the past week")
+    - alpha_size: the alphabet size
+    - prefix: prefix for file name
     
+    Outputs: None
+    
+    Purpose: Creates input data file to be read for cSPDADE
+    '''
     db_filename = prefix + ".ascii"
     data_file = open(db_filename,"w")
     seq_id = 1
@@ -690,7 +812,15 @@ def create_database(sax,letter_map,tw,alpha_size,prefix):
     data_file.close()
     
 def parse_patterns(content):
+    '''
+    Inputs:
+    - content: the patterns to be parsed
     
+    Outputs:
+    - parsed_content: parsed patterns
+    
+    Purpose: parses patterns returned by the SPADE algorithm
+    '''
     # Parse patterns
     for i in range(len(content)):
         content[i] = content[i].strip('\n')
@@ -699,12 +829,26 @@ def parse_patterns(content):
         content[i] = content[i][0].split(' -> ')
     
     # Remove 1-sequences
-    content = [seq for seq in content if len(seq) > 1]
+    parsed_content = [seq for seq in content if len(seq) > 1]
     
-    return content
+    return parsed_content
      
-def get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path):
+def get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path,min_sup):
+    '''
+    Inputs:
+    - sax: SAX representation of data 
+    - letter_map: a mapping from letters to integers
+    - tw: the time window size (default is "the past week")
+    - alpha_size: the alphabet size
+    - prefix: prefix for file name
+    - path: file path used for files needed for SPADE algorithm
+    - cygwin_path: file path of Cygwin or other module to run SPADE commands
+    - min_sup: minimum support value
     
+    Outputs the parsed patterns of the content from SPADE
+    
+    Purpose: To retrieve the patterns SPADE finds in the SAX representation
+    '''
     # Create a data file for CSPADE
     create_database(sax,letter_map,tw,alpha_size,prefix)    
     
@@ -727,7 +871,9 @@ def get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path):
     subprocess.check_output(exttpose,stderr=subprocess.STDOUT) 
 
     # Get sequences and output them to patterns.txt file
-    spade = [path + "spade.exe", "-e", "1", "-i", file_path, "-s", "0.4", "-o", "-w", "7", "-u", "1"]
+    minimum_support = str(min_sup)
+    TW = str(tw)
+    spade = [path + "spade.exe", "-e", "1", "-i", file_path, "-s", minimum_support, "-o", "-w", TW, "-u", "1"]
     output_file = open(path + "patterns.txt","w")
     subprocess.call(spade,stdout=output_file)
     output_file.close()    
@@ -740,9 +886,28 @@ def get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path):
     content = content[2:]
     return parse_patterns(content)
 
-def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefix,path,cygwin_path,proto_cnt,flag_=None):
+def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,flag_=None):
+    '''
+    Inputs: 
+    - summarizer_type: the type of summarizer
+    - sax: SAX representation of data 
+    - alphabet: alphabet of letters used for SAX
+    - letter_map: a mapping from letters to integers
+    - tw: the time window (default is "the past week")
+    - alpha_size: the alphabet size
+    - prefix: prefix for file name
+    - path: file path used for files needed for SPADE algorithm
+    - cygwin_path: file path of Cygwin or other module to run SPADE commands
+    - min_sup: minimum support value
+    - min_conf: minimum confidence threshold    
+    - proto_cnt: current number of summaries generated
+    - flag_: flag used for unique data (default is None)
     
-    patterns = get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path)
+    Outputs:
+    - summary_list: list of if-then pattern summaries
+    - proto_cnt: new number of summaries generated
+    '''
+    patterns = get_patterns(sax,letter_map,tw,alpha_size,prefix,path,cygwin_path,min_sup)
     summarizer_type = summarizer_type[0].lower() + summarizer_type[1:]
     
     pattern_dict = dict()
@@ -754,22 +919,29 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
         
     index = 1 
     cnt = -1
-    min_conf = 0.8
+    
+    
+    
     while cnt != 0:
         cnt = 0
         for item in string_patterns:
+            
+            # Retrieve possible prefixes and suffixes
             prefix = item[:index]
             suffix = item[index:]
             
             if len(suffix) == 0:
                 continue
             
+            # Map prefixes to subsuffixes and corresponding counts
             if prefix not in pattern_dict.keys():
                 pattern_dict[prefix] = dict()
               
+            # Count prefix occurences
             if prefix not in prefix_cnt.keys():
                 prefix_cnt[prefix] = 0           
             
+            # Find all possible subsuffixes
             subsuffix = ""
             for i in range(len(suffix)):
                 subsuffix += suffix[i]
@@ -782,14 +954,18 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
             cnt += 1
             
         index += 1
-        
+    
+    # Compute frequencies of prefix-subsuffix pairs
     freq_patterns = []
     for key in pattern_dict.keys():
         for subkey in pattern_dict[key].keys():
             pattern_dict[key][subkey] = float(pattern_dict[key][subkey])/float(prefix_cnt[key])
             freq_patterns.append([key,subkey,pattern_dict[key][subkey]])
-                     
+                    
+    # Sort frequent pattern candidates by subsuffix counts
     freq_patterns = sorted(freq_patterns,key = lambda x: x[2],reverse=True)
+    
+    # Remove patterns that do not reach the minimum confidence threshold
     index = 0
     for i in range(len(freq_patterns)):
         if freq_patterns[i][2] <= min_conf:
@@ -799,14 +975,15 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
     freq_patterns = freq_patterns[:index]
     
     if len(freq_patterns) != 0:
-        print "I have found some patterns for you:"    
+        print "SPADE Patterns summaries:"    
         
-    # Focusing on next day only at the moment
+    summary_list = []
     for pattern in freq_patterns:
         prefix = pattern[0]
         suffix = pattern[1]
         conf = float(pattern[2])
                 
+        # Get letters corresponding to integers in patterns
         letters1 = []
         letters2 = []
         for i in range(len(prefix)):
@@ -815,6 +992,7 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
         for i in range(len(suffix)):
             letters2.append(alphabet[int(suffix[i])-1])
         
+        # Convert letters to summarizers
         summarizers1 = []
         summarizers2 = []
         for i in range(len(letters1)):
@@ -825,6 +1003,7 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
         if summarizer_type[-1] == "s":
             summarizer_type = summarizer_type[:-1]
             
+        # Construct if-then pattern summary
         first = "There is " + str(int(conf*100)) + "% confidence that, when your " + summarizer_type.lower() + " follows the pattern of being "
         second = ""
         for i in range(len(summarizers1)):
@@ -842,50 +1021,23 @@ def analyze_patterns(summarizer_type,sax,alphabet,letter_map,tw,alpha_size,prefi
                 
                 
         summary = first + second + third + fourth + fifth
-        print summary
-        proto_cnt += 1        
-                
-        #raw_input(first + second + third + fourth)
+        summary_list.append(summary)
+        proto_cnt += 1      
         
-            
-        #raw_input([summarizers1,summarizers2])
-            
-        #if summarizer1 not in pattern_dict.keys():
-            #pattern_dict[summarizer1] = dict()
-        #else:
-            #if summarizer2 not in pattern_dict[summarizer1].keys():
-                #pattern_dict[summarizer1][summarizer2] = 1
-            #else:
-                #pattern_dict[summarizer1][summarizer2] += 1
-                        
-    
-            
-    # Get summaries
-    #for summarizer1 in pattern_dict.keys():
-        #max_val = 0
-        #best_summarizer = None
-        
-        ## Find most frequent summarizer
-        #for summarizer2 in pattern_dict[summarizer1].keys():
-            #if pattern_dict[summarizer1][summarizer2] > max_val:
-                #max_val = pattern_dict[summarizer1][summarizer2]
-                #best_summarizer = summarizer2
-                
-        #prefix = "Whenever your " + summarizer_type.lower() + " is " + summarizer1 + ", it tends to "
-        #summary = ""
-        #if summarizer1 == summarizer2:
-            #summary = prefix + "stay the same"
-        #else:
-            #summary = prefix + "become " + summarizer2
-            
-        #summary = summary + " the next day"
-        #print summary
-        #proto_cnt += 1
-        
-    return proto_cnt
+    return summary_list, proto_cnt
         
 def within_series_clustering(data,window_size=7,thres=4,alpha_size=5):
-        
+    '''
+    Inputs:
+    - data: the raw data
+    - window_size: the time window size (default is a week)
+    - thres: similarity threshold (default is 4)
+    - alpha_size: alphabet size (default is 5)
+    
+    Outputs clusters found by the Squeezer algorithm
+    
+    Purpose: find clusters in data based on the Squeezer algorithm
+    '''
     # Get SAX representation
     sax_rep = ts_to_string(znorm(np.array(data)), cuts_for_asize(alpha_size))
     
@@ -899,7 +1051,16 @@ def within_series_clustering(data,window_size=7,thres=4,alpha_size=5):
     return squeezer(np.array(chunked_sax),thres)      
 
 def display_clusters(data,clusters,window_size=7):
+    '''
+    Inputs:
+    - data: the raw data
+    - clusters: clusters found using find_similar_tw
+    - window_size: the time window size (default is a week)
     
+    Outputs: None
+    
+    Purpose: Displays clusters over the raw data using different colors
+    '''
     # Modify data to pair each time series with its index
     for i in range(len(data)):
         data[i] = [i,data[i]]    
@@ -908,66 +1069,109 @@ def display_clusters(data,clusters,window_size=7):
     fig, ax = plt.subplots()
     colors = []
     
-    # Generate list of random colors
-    for i in range(len(clusters)):
+    # Generate list of random colors (# of clusters + rest of data)
+    for i in range(len(clusters)+1):
         colors.append(tuple([np.random.uniform(),np.random.uniform(),np.random.uniform()]))
       
-    for i in range(0,len(data),window_size):
+    for i in range(len(data)-window_size):
         plt.axvline(x=i,color='k',linewidth=0.05)
-        week_num = int(i/7)
         
-        if week_num >= len(data)/window_size:
-            break
-        
-        days = []
         # Get start and stop days
+        days = []        
         for j in range(window_size+1):   
             days.append(data[i+j])
         
-        # Get ranges in data for colors
+        # Get ranges in data for colors and plot them
         for start,stop in zip(days[:-1],days[1:]):
             x,y = zip(start,stop)
-            cluster_index = get_cluster_index(week_num,clusters)
-            ax.plot(x,y,color=colors[cluster_index])
-            
-    plt.show()   
+            color_index = -1
+            for j in range(len(clusters)):
+                if i in clusters[j]:
+                    color_index = j
 
-def find_similar_weeks(data,week_sax,window_size=7,alpha_size=5,dist='mindist'):
+            ax.plot(x,y,color=colors[color_index])
+            
+    plt.show()
+
+def find_similar_tw(data,tw_sax,window_size=7,alpha_size=5,dist='mindist'):
+    '''
+    Inputs:
+    - data: the raw data
+    - tw_sax: the SAX representation of the past tw
+    - window_size: the time window size (default is a week)
+    - alpha_size: the alphabet size (default is 5)
+    - dist: the distance function used (default is Keogh's MINDIST)
     
+    Outputs:
+    - tw_comparisons: a list of the clusters
+    - indices: the indices where the time windows in the clusters are in the data
+    
+    Purpose: find clusters in the data using SAX representation
+    '''
     # Get weekly patterns
-    weekly_patterns = sax_via_window(data,window_size,window_size,alpha_size,dist)
+    tw_patterns = sax_via_window(data,window_size,window_size,alpha_size,dist)
     last_index = len(data) - (window_size+1)
-    other_weeks = []
-        
+    other_tw = []
+    indices = []
+    
     # Find grouping with current week and set other_weeks to that grouping
     # minus the current week
-    for key in weekly_patterns.keys():
-        if last_index in weekly_patterns[key]:
-            other_weeks = weekly_patterns[key][:-1]
+    for key in tw_patterns.keys():
+        if tw_patterns[key] == 6:
+            display_clusters(data,tw_patterns[key])
+        if last_index in tw_patterns[key]:
+            indices = [tw_patterns[key]]
+            other_tw = tw_patterns[key][:-1]
             break
                     
-    week_comparisons = [] 
-    for i in range(len(other_weeks)):
-        week_letter = week_sax[other_weeks[i]/window_size]
-        next_week = week_sax[(other_weeks[i]+window_size)/window_size]
+    tw_comparisons = [] 
+    for i in range(len(other_tw)):
+        tw_letter = tw_sax[other_tw[i]/window_size]
+        next_tw = tw_sax[(other_tw[i]+window_size)/window_size]
         
-        week_comparisons.append([week_letter,next_week])   
+        tw_comparisons.append([tw_letter,next_tw])   
     
-    return week_comparisons
+    return tw_comparisons, indices
 
 ####### HELPER FUNCTIONS #######
 
 def unique_color():
+    '''
+    Inputs: None
+    
+    Outputs: None
+    
+    Purpose: Generates a random color
+    '''
     #https://stackoverflow.com/questions/17240694/python-how-to-plot-one-line-in-different-colors
     return plt.cm.gist_ncar(np.random.random())
 
-def get_cluster_index(num,clusters):
+def get_cluster_index(num,clusters,tw=7):
+    '''
+    Inputs: 
+    - num: the number to be looked for in a cluster
+    - clusters: the list of clusters
+    - tw: the time window size (default is a week)
+    
+    Outputs the index of the cluster
+    
+    Purpose: Find the appropriate cluster
+    '''
     for i in range(len(clusters)):
-        if num in clusters[i]:
+        if clusters[i] == num:
             return i
     return -1
 
 def mindist(sax_rep,sax_rep2):
+    '''
+    Inputs:
+    - sax_rep: first SAX representation
+    - sax_rep2: second SAX representation
+    
+    Outputs the distance between the two SAX representations
+    
+    Purpose: Implementation of Keogh's MINDIST function
+    '''
     summation = 0
     for i in range(len(sax_rep)):
         dist = letter_dist(sax_rep[i],sax_rep2[i])
