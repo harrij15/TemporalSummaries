@@ -56,7 +56,7 @@ This system was implemented in Python 2.7.
 
 ## Sample Run
 <p align="center">
-  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stepcountdata.png"/>
+  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stepcountdata.png" height="350" weight="350"/>
 </p>
 
 The chart above is a snippet of step count data for one user in the Insight4Wear dataset that spans over 200 days. Using a time window of seven days and an alphabet size of 5, our system produces ten summaries using five different protoforms with a minimum confidence threshold of 50% and a minimum support threshold of 15%. Our approach generates a diverse set of summaries for the step count data, spanning standard evaluation summaries at the daily and the weekly granularities, comparison summaries, a goal evaluation summary, a standard trends summary, and if-then pattern summaries with 100% confidence.
