@@ -10,6 +10,12 @@ where summarizer is a conclusive phrase for the summary (e.g., "high", "low", et
 
 Our system relies on SAX representations of time-series data and temporal/sequence pattern discovery via the SPADE algorithm. SAX representations allow us to convert raw time-series data into symbolic strings containing letters of the alphabet. These representations make it easier for time-series analysis methods to find interesting patterns and anomalies efficiently in the data. Using the SPADE algorithm, we are able to discover frequent sequences, or patterns, in the data. 
 
-## System Requirements
+## Setup
+1. Set value of `attr_index` as index for the desired attribute (available attributes stored in `attributes` list).
+2. Set `min_conf` (minimum confidence) and `min_sup` (minimum support) thresholds. 
+3. Set `path` to store pattern data for cSPADE.
+4. Set `cygwin_path` for path to Cygwin (or equivalent) to run C++ commands.
+
+## Example Run
 
 ## References
