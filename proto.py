@@ -31,8 +31,8 @@ if __name__ == "__main__":
     # Parameters for SPADE
     min_conf = 0.5    
     min_sup = 0.15
-    path = "C:/Users/harrij15/Documents/GitHub/RPI-HEALS//" # Path for pattern data
-    cygwin_path = r"C:\Apps\cygwin64\bin" # Path to Cygwin
+    path = "" # Path for pattern data
+    cygwin_path = r"" # Path to Cygwin
     
     attr = attributes[attr_index]
         
