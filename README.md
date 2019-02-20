@@ -4,4 +4,4 @@ Our framework automatically generates a diverse set of natural language summarie
 
 On (quantifier) (sub-time window) in the past (time window), your (attribute) was (summarizer).
   
-where summarizer is a conclusive phrase for the summary (e.g., high, low, etc.), and quantifier is a word or phrase that specifies how often the summarizer is true (e.g., most, all, etc.), given an attribute of interest.  A concrete summary following the above protoform is: “On **_most_ days** in the past **week**, your **sugar level** was **very high**.”
+where summarizer is a conclusive phrase for the summary (e.g., "high", "low", etc.), and quantifier is a word or phrase that specifies how often the summarizer is true (e.g., "most", "all", etc.), given an attribute of interest.  A concrete summary following the above protoform is: “On **_most_ days** in the past **week**, your **sugar level** was **very high**.”
