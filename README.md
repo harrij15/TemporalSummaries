@@ -5,3 +5,5 @@ Our framework automatically generates a diverse set of natural language summarie
 On (quantifier) (sub-time window) in the past (time window), your (attribute) was (summarizer).
   
 where summarizer is a conclusive phrase for the summary (e.g., "high", "low", etc.), and quantifier is a word or phrase that specifies how often the summarizer is true (e.g., "most", "all", etc.), given an attribute of interest.  A concrete summary following the above protoform is: “On **_most_ days** in the past **week**, your **sugar level** was **very high**.”
+
+Our system relies on SAX representations of time-series data and temporal/sequence pattern discovery via the SPADE algorithm. SAX representations allow us to convert raw time-series data into symbolic strings containing letters of the alphabet. These representations make it easier for time-series analysis methods to find interesting patterns and anomalies efficiently in the data. Using the SPADE algorithm, we are able to discover frequent sequences, or patterns, in the data. 
