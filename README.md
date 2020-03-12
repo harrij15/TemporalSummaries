@@ -80,8 +80,8 @@ A subset of multivariate summaries for Apple and Aetna are shown below. Please n
 | Standard Evaluation (daily granularity w/ qualifier)  | On all of the days in the past week, when the AAPL close value was very high, the AET close value was very high. | 
 | Comparison            |The AAPL close value was about the same and the AET close value was about the same in week 13 as they were in week 12.     |   
 | Standard Trends       | Some of the time, the AAPL close value increases and the AET close value increases from one day to the next.     |  
-| If-then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
-| If-then Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
+| If-Then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
+| Day-Based Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
 
 ## References
