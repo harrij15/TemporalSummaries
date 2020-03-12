@@ -21,7 +21,7 @@ where summarizer is a conclusive phrase for the summary (e.g., "high", "low", et
 
 Our system relies on SAX representations of time-series data [1,3] and temporal/sequence pattern discovery via the SPADE algorithm [8]. SAX representations allow us to convert raw time-series data into symbolic strings containing letters of the alphabet. These representations make it easier for time-series analysis methods to find interesting patterns and anomalies efficiently in the data. Using the SPADE algorithm, we are able to discover frequent sequences, or patterns, in the data. These patterns are considered "frequent" if they are above the specified minimum support threshold, and summaries for these patterns are generated if they are above the specified minimum confidence threshold.
 
-We mainly use data from the Insight4Wear dataset. Insight4Wear [2] is a quantified-self/life-logging app, with about 11.5 million records of information. It provides data gathered from mobile devices that tracks step counts, heart rates, and user activities from around 1,000 users.
+We mainly use data from the Alpha Vantage REST API. Alpha Vantage [2] provides free APIs that allow users to receive real-time and historical financial data.
 
 ## Implemented Protoforms
 
@@ -29,19 +29,29 @@ Below is a table of the current list of protoforms our system uses to generate s
 
 |     Summary Type      |   Protoform   |
 |:---------------------:|:-------------:| 
-| Standard Evaluation   | On Q sTW in the past TW, your A was S. | 
-| Comparison            | You did S with G than you did the TW before.     |   
-| Goal Evaluation       | On Q sTW in the past TW, you S the G.      |    
-| Standard Trends       | Q time, your A S from one sTW to the next.     |  
-| Cluster-based Pattern | During Q TW that follow this pattern, your A S the next TW.     |  
-| If-then Pattern       | There is C confidence that, when your A is S1, then S2,...,then Sn, it tends to be Sn+1 the next TW.      | 
+| Standard Evaluation (TW)  | In the past full TW, your A<sub>1</sub> has been S<sub>1</sub>,..., and your A<sub>n</sub> has been S<sub>n</sub>. | 
+| Standard Evaluation (sTW)   | On Q sTW in the past TW, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
+| Standard Evaluation (sTW w/ qualifier)   | On Q sTW in the past TW L, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
+| Comparison            | Your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub> on TW<sub>1</sub> N<sub>1</sub> than they were on TW<sub>2</sub> N<sub>2</sub>. |  
+| Goal Comparison            | You did S<sub>1</sub> overall with keeping your A<sub>1</sub> G<sub>1</sub>,..., and you did S<sub>n</sub> overall with keeping your A<sub>n</sub> G<sub>n</sub> in TW<sub>1</sub> N<sub>1</sub> than you did in TW<sub>2</sub> N<sub>2</sub>. |   
+| Goal Evaluation       | On Q sTW in the past TW, you S<sub>1</sub> your goal to keep your A<sub>1</sub> G<sub>1</sub>,..., and you S<sub>n</sub> your goal to keep your A<sub>n</sub> G<sub>n</sub>.      |    
+| Standard Trends       | Q time, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> from one sTW to the next.     |  
+| Cluster-Based Pattern | During Q TW similar to TW N, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> the next TW.     |  
+| Standard Pattern | The last time you had a TW similar to TW N, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> the next TW.     |  
+| If-Then Pattern       | There is C confidence that, when your A<sub>1</sub> is S<sub>11</sub>, then S<sub>21</sub>,..., then S<sub>m1</sub>,..., and your A<sub>n</sub> is S<sub>1n</sub>, then S<sub>2n</sub>,..., then S<sub>mn</sub>, your A<sub>1</sub> tends to be S<sub>(m+1)1</sub>,..., and your A<sub>n</sub> tends to be S<sub>(m+1)n</sub> the next TW.      | 
+| Day If-Then Pattern       | There is C confidence that, when your A<sub>1</sub> is S<sub>11</sub> on a D<sub>11</sub>, then S<sub>21</sub> on a D<sub>21</sub>,..., then S<sub>m1</sub> on a D<sub>m1</sub>,..., and your A<sub>n</sub> is S<sub>1n</sub> on a D<sub>1n</sub>, then S<sub>2n</sub> on a D<sub>2n</sub>,..., then S<sub>mn</sub> on a D<sub>mn</sub>, your A<sub>1</sub> tends to be S<sub>(m+1)1</sub> on a D<sub>(m+1)1</sub>,..., and your A<sub>n</sub> tends to be S<sub>(m+1)n</sub> on a D<sub>(m+1)n</sub> the next TW.      | 
+ | General If-Then Pattern       | In general, if your A<sub>1</sub> is S<sub>1</sub>,..., and your A<sub>n</sub> is S<sub>n</sub>, then your A<sub>n+1</sub> is S<sub>n+1</sub>,..., and your A<sub>n+m</sub> is S<sub>n+m</sub>.      | 
+| Day-Based Pattern | Your A<sub>1</sub> tends to be S<sub>1</sub>,..., and your A<sub>n</sub> tends to be S<sub>n</sub> on D.     |  
+| Goal Assistance | In order to better follow the G, you should S<sub>1</sub> your A<sub>1</sub>, S<sub>2</sub> your A<sub>2</sub>, ..., and S<sub>n</sub> your A<sub>n</sub>.     |  
+| Population Evaluation | Q<sub>1</sub> users in this study had a S<sub>1</sub> A<sub>1</sub>, a S<sub>2</sub> A<sub>2</sub>, ..., and a S<sub>n</sub> A<sub>n</sub> P.     |  
 
-where S denotes a summarizer, Q is a quantifier, A is an attribute, G is a goal, C is a confidence value, TW is a time window, and sTW a sub-time window.
+
+where S denotes a summarizer, Q is a quantifier, L is a qualifier, A is an attribute, G is a goal, D is a day of the week, C is a confidence value, TW is a time window, sTW is a sub-time window, N is a time window index, and P is a sub-protoform.
 
 
 ## Setup
 
-This system was implemented in Python 2.7.
+This system was implemented in Python 3.
 
 1. Install required Python packages using `pip install`
 - numpy
@@ -56,30 +66,27 @@ This system was implemented in Python 2.7.
 
 ## Sample Run
 <p align="center">
-  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stepcountdata.png" height="350" weight="350"/>
+  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stock_data.png" height="350" weight="350"/>
 </p>
 
-The chart above is a snippet of step count data for one user in the Insight4Wear dataset that spans over 200 days. Using a time window of seven days and an alphabet size of 5, our system produces ten summaries using five different protoforms with a minimum confidence threshold of 50% and a minimum support threshold of 15%. Our approach generates a diverse set of summaries for the step count data, spanning standard evaluation summaries at the daily and the weekly granularities, comparison summaries, a goal evaluation summary, a standard trends summary, and if-then pattern summaries with 100% confidence.
+The chart above is a snippet of stock market ticker data for Apple and Aetna that spans 100 days. Using a time window of seven days and an alphabet size of 5, our system produces 287 summaries (both univariate and multivariate) using seven different protoforms with a minimum confidence threshold of 80% and a minimum support threshold of 20%. Our approach generates a diverse set of summaries for the ticker data.
 
-These summaries are shown below:
+A subset of multivariate summaries for Apple and Aetna are shown below. Please note that not all protoforms are appropriate for stock market ticker data.
 
 |     Summary Type      |   Summary   |
 |:---------------------:|:-------------:| 
-| Standard Evaluation (weekly granularity)   | In the past week, your step count has been high. | 
-| Standard Evaluation (daily granularity)  | Over more than half of the days in the past week, your step count has been moderate. | 
-| Comparison            | You did better with keeping your step count high than you did the week before.     |   
-| Comparison            | You did not do as well with keeping your step counts high than you did on the week starting on day 105.   |   
-| Goal Evaluation       | On most of the days in the past weeks, you did not reach the American Heart Association’s recommended number of 10,000 steps per day.      |    
-| Standard Trends       | More than half of the time, your step count increases from one day to the next.     |  
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being low, then low, it tends to be moderate the next day      |
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being low, then moderate, it tends to be very high the next day.      | 
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being high, then low, it tends to be low the next day.      | 
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being moderate, then very high, it tends to be low the next day.      | 
+| Standard Evaluation (weekly granularity)   | In the past full week, the AAPL close value has been very high and the AET close value has been very high. | 
+| Standard Evaluation (daily granularity)  | On all of the days in the past week, the AAPL close value has been very high and the AET close value has been very high. | 
+| Standard Evaluation (daily granularity w/ qualifier)  | On all of the days in the past week, when the AAPL close value was very high, the AET close value was very high. | 
+| Comparison            |The AAPL close value was about the same and the AET close value was about the same in week 13 as they were in week 12.     |   
+| Standard Trends       | Some of the time, the AAPL close value increases and the AET close value increases from one day to the next.     |  
+| If-Then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
+| Day-Based Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
 
 ## References
 1. Jessica Lin, Eamonn J. Keogh, Li Wei, and Stefano Lonardi. 2007. Experiencing SAX: A Novel Symbolic Representation of Time Series. Data Min. Knowl. Discov. 15 (08 2007), 107-144
-2. Reza Rawassizadeh, Elaheh Momeni, Chelsea Dobbins, Joobin Gharibshah, and Michael Pazzani. 2016. Scalable Daily Human Behavioral Pattern Mining from Multivariate Temporal Data. IEEE Transactions on Knowledge and Data Engineering 28, 11 (Nov. 2016), 3098–3112.
+2. Romel Torres. 2019. Alpha Vantage. https://github.com/RomelTorres/alpha_vantage.
 3. Senin, P., Lin, J., Wang, X., Oates, T., Gandhi, S., Boedihardjo, A.P., Chen, C., Frankenstein, S., Lerner, M., GrammarViz 2.0: a tool for grammar-based pattern discovery in time series, ECML/PKDD Conference, 2014.
 4. Ronald R. Yager. 1982. A new approach to the summarization of data. Information Sciences 28, 1 (1982), 69 – 86.
 5.	Lotfi A. Zadeh. 1975. The concept of a linguistic variable and its application to approximate reasoning–I. Information Sciences 8, 3 (1975), 199 – 249.
