@@ -24,6 +24,8 @@ Our system relies on SAX representations of time-series data [1,3] and temporal/
 We provide sample data from the Alpha Vantage REST API and the National Centers For
 Environmental Information (NCEI). Alpha Vantage [2] provides free APIs that allow users to receive real-time and historical financial data. NCEI [9] provides average temperature and average wind speed data tracked at the daily and hourly granularity by the weather station at the Huntsville International Airport in Huntsville, Alabama. 
 
+We are unable to provide data for the running example but this can be accessed by following this link: https://larc.smu.edu.sg/myfitnesspal-food-diary-dataset.
+
 ## Implemented Protoforms
 
 Below is a table of the current list of protoforms our system uses to generate summaries:
