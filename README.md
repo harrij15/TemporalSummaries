@@ -21,7 +21,7 @@ where summarizer is a conclusive phrase for the summary (e.g., "high", "low", et
 
 Our system relies on SAX representations of time-series data [1,3] and temporal/sequence pattern discovery via the SPADE algorithm [8]. SAX representations allow us to convert raw time-series data into symbolic strings containing letters of the alphabet. These representations make it easier for time-series analysis methods to find interesting patterns and anomalies efficiently in the data. Using the SPADE algorithm, we are able to discover frequent sequences, or patterns, in the data. These patterns are considered "frequent" if they are above the specified minimum support threshold, and summaries for these patterns are generated if they are above the specified minimum confidence threshold.
 
-We mainly use data from the Insight4Wear dataset. Insight4Wear [2] is a quantified-self/life-logging app, with about 11.5 million records of information. It provides data gathered from mobile devices that tracks step counts, heart rates, and user activities from around 1,000 users.
+We mainly use data from the Alpha Vantage REST API. Alpha Vantage [2] provides free APIs that allow users to receive real-time and historical financial data.
 
 ## Implemented Protoforms
 
@@ -66,30 +66,27 @@ This system was implemented in Python 3.
 
 ## Sample Run
 <p align="center">
-  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stepcountdata.png" height="350" weight="350"/>
+  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/stock_data.png" height="350" weight="350"/>
 </p>
 
-The chart above is a snippet of step count data for one user in the Insight4Wear dataset that spans over 200 days. Using a time window of seven days and an alphabet size of 5, our system produces ten summaries using five different protoforms with a minimum confidence threshold of 50% and a minimum support threshold of 15%. Our approach generates a diverse set of summaries for the step count data, spanning standard evaluation summaries at the daily and the weekly granularities, comparison summaries, a goal evaluation summary, a standard trends summary, and if-then pattern summaries with 100% confidence.
+The chart above is a snippet of stock market ticker data for Apple and Aetna that spans 100 days. Using a time window of seven days and an alphabet size of 5, our system produces 287 summaries (both univariate and multivariate) using seven different protoforms with a minimum confidence threshold of 80% and a minimum support threshold of 20%. Our approach generates a diverse set of summaries for the ticker data.
 
-These summaries are shown below:
+A subset of multivariate summaries for Apple and Aetna are shown below. Please note that not all protoforms are appropriate for stock market ticker data.
 
 |     Summary Type      |   Summary   |
 |:---------------------:|:-------------:| 
-| Standard Evaluation (weekly granularity)   | In the past week, your step count has been high. | 
-| Standard Evaluation (daily granularity)  | Over more than half of the days in the past week, your step count has been moderate. | 
-| Comparison            | You did better with keeping your step count high than you did the week before.     |   
-| Comparison            | You did not do as well with keeping your step counts high than you did on the week starting on day 105.   |   
-| Goal Evaluation       | On most of the days in the past weeks, you did not reach the American Heart Association’s recommended number of 10,000 steps per day.      |    
-| Standard Trends       | More than half of the time, your step count increases from one day to the next.     |  
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being low, then low, it tends to be moderate the next day      |
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being low, then moderate, it tends to be very high the next day.      | 
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being high, then low, it tends to be low the next day.      | 
-| If-then Pattern       | There is 100% confidence that, when your step count follows the pattern of being moderate, then very high, it tends to be low the next day.      | 
+| Standard Evaluation (weekly granularity)   | In the past full week, the AAPL close value has been very high and the AET close value has been very high. | 
+| Standard Evaluation (daily granularity)  | On all of the days in the past week, the AAPL close value has been very high and the AET close value has been very high. | 
+| Standard Evaluation (daily granularity w/ qualifier)  | On all of the days in the past week, when the AAPL close value was very high, the AET close value was very high. | 
+| Comparison            |The AAPL close value was about the same and the AET close value was about the same in week 13 as they were in week 12.     |   
+| Standard Trends       | Some of the time, the AAPL close value increases and the AET close value increases from one day to the next.     |  
+| If-then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
+| If-then Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
 
 ## References
 1. Jessica Lin, Eamonn J. Keogh, Li Wei, and Stefano Lonardi. 2007. Experiencing SAX: A Novel Symbolic Representation of Time Series. Data Min. Knowl. Discov. 15 (08 2007), 107-144
-2. Reza Rawassizadeh, Elaheh Momeni, Chelsea Dobbins, Joobin Gharibshah, and Michael Pazzani. 2016. Scalable Daily Human Behavioral Pattern Mining from Multivariate Temporal Data. IEEE Transactions on Knowledge and Data Engineering 28, 11 (Nov. 2016), 3098–3112.
+2. Romel Torres. 2019. Alpha Vantage. https://github.com/RomelTorres/alpha_vantage.
 3. Senin, P., Lin, J., Wang, X., Oates, T., Gandhi, S., Boedihardjo, A.P., Chen, C., Frankenstein, S., Lerner, M., GrammarViz 2.0: a tool for grammar-based pattern discovery in time series, ECML/PKDD Conference, 2014.
 4. Ronald R. Yager. 1982. A new approach to the summarization of data. Information Sciences 28, 1 (1982), 69 – 86.
 5.	Lotfi A. Zadeh. 1975. The concept of a linguistic variable and its application to approximate reasoning–I. Information Sciences 8, 3 (1975), 199 – 249.
