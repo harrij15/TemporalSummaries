@@ -29,19 +29,29 @@ Below is a table of the current list of protoforms our system uses to generate s
 
 |     Summary Type      |   Protoform   |
 |:---------------------:|:-------------:| 
-| Standard Evaluation   | On Q sTW in the past TW, your A was S. | 
-| Comparison            | You did S with G than you did the TW before.     |   
-| Goal Evaluation       | On Q sTW in the past TW, you S the G.      |    
-| Standard Trends       | Q time, your A S from one sTW to the next.     |  
-| Cluster-based Pattern | During Q TW that follow this pattern, your A S the next TW.     |  
-| If-then Pattern       | There is C confidence that, when your A is S1, then S2,...,then Sn, it tends to be Sn+1 the next TW.      | 
+| Standard Evaluation (TW)  | In the past full TW, your A<sub>1</sub> has been S<sub>1</sub>,..., and your A<sub>n</sub> has been S<sub>n</sub>. | 
+| Standard Evaluation (sTW)   | On Q sTW in the past TW, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
+| Standard Evaluation (sTW w/ qualifier)   | On Q sTW in the past TW L, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
+| Comparison            | Your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub> on TW<sub>1</sub> N<sub>1</sub> than they were on TW<sub>2</sub> N<sub>2</sub>. |  
+| Goal Comparison            | You did S<sub>1</sub> overall with keeping your A<sub>1</sub> G<sub>1</sub>,..., and you did S<sub>n</sub> overall with keeping your A<sub>n</sub> G<sub>n</sub> in TW<sub>1</sub> N<sub>1</sub> than you did in TW<sub>2</sub> N<sub>2</sub>. |   
+| Goal Evaluation       | On Q sTW in the past TW, you S<sub>1</sub> your goal to keep your A<sub>1</sub> G<sub>1</sub>,..., and you S<sub>n</sub> your goal to keep your A<sub>n</sub> G<sub>n</sub>.      |    
+| Standard Trends       | Q time, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> from one sTW to the next.     |  
+| Cluster-Based Pattern | During Q TW similar to TW N, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> the next TW.     |  
+| Standard Pattern | The last time you had a TW similar to TW N, your A<sub>1</sub> S<sub>1</sub>,..., and your A<sub>n</sub> S<sub>n</sub> the next TW.     |  
+| If-Then Pattern       | There is C confidence that, when your A<sub>1</sub> is S<sub>11</sub>, then S<sub>21</sub>,..., then S<sub>m1</sub>,..., and your A<sub>n</sub> is S<sub>1n</sub>, then S<sub>2n</sub>,..., then S<sub>mn</sub>, your A<sub>1</sub> tends to be S<sub>(m+1)1</sub>,..., and your A<sub>n</sub> tends to be S<sub>(m+1)n</sub> the next TW.      | 
+| Day If-Then Pattern       | There is C confidence that, when your A<sub>1</sub> is S<sub>11</sub> on a D<sub>11</sub>, then S<sub>21</sub> on a D<sub>21</sub>,..., then S<sub>m1</sub> on a D<sub>m1</sub>,..., and your A<sub>n</sub> is S<sub>1n</sub> on a D<sub>1n</sub>, then S<sub>2n</sub> on a D<sub>2n</sub>,..., then S<sub>mn</sub> on a D<sub>mn</sub>, your A<sub>1</sub> tends to be S<sub>(m+1)1</sub> on a D<sub>(m+1)1</sub>,..., and your A<sub>n</sub> tends to be S<sub>(m+1)n</sub> on a D<sub>(m+1)n</sub> the next TW.      | 
+ | General If-Then Pattern       | In general, if your A<sub>1</sub> is S<sub>1</sub>,..., and your A<sub>n</sub> is S<sub>n</sub>, then your A<sub>n+1</sub> is S<sub>n+1</sub>,..., and your A<sub>n+m</sub> is S<sub>n+m</sub>.      | 
+| Day-Based Pattern | Your A<sub>1</sub> tends to be S<sub>1</sub>,..., and your A<sub>n</sub> tends to be S<sub>n</sub> on D.     |  
+| Goal Assistance | In order to better follow the G, you should S<sub>1</sub> your A<sub>1</sub>, S<sub>2</sub> your A<sub>2</sub>, ..., and S<sub>n</sub> your A<sub>n</sub>.     |  
+| Population Evaluation | Q<sub>1</sub> users in this study had a S<sub>1</sub> A<sub>1</sub>, a S<sub>2</sub> A<sub>2</sub>, ..., and a S<sub>n</sub> A<sub>n</sub> P.     |  
 
-where S denotes a summarizer, Q is a quantifier, A is an attribute, G is a goal, C is a confidence value, TW is a time window, and sTW a sub-time window.
+
+where S denotes a summarizer, Q is a quantifier, L is a qualifier, A is an attribute, G is a goal, D is a day of the week, C is a confidence value, TW is a time window, sTW is a sub-time window, N is a time window index, and P is a sub-protoform.
 
 
 ## Setup
 
-This system was implemented in Python 2.7.
+This system was implemented in Python 3.
 
 1. Install required Python packages using `pip install`
 - numpy
