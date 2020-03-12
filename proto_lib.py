@@ -101,7 +101,10 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 else:
                     summary = "On " + str(best_quantifier) + " " + x_val + " in the past " + singular_TW + ", when"
                 for i in range(len(qualifier_info[0])):
-                    summary += " " + particle + " " + qualifier_info[0][i].lower() + " was " + qualifier_info[1][i]
+                    attribute_ = qualifier_info[0][i]
+                    if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
+                        attribute_ = attribute_.lower()                     
+                    summary += " " + particle + " " + attribute_ + " was " + qualifier_info[1][i]
                     if i != len(qualifier_info[0])-1:
                         summary += " and"                     
                 
@@ -1821,7 +1824,7 @@ def get_single_SAX_summary(attr_list,letter_list,letter_map_list,alpha_sizes,TW,
     particle = "your"
     weather_flag = False
     for attr in attr_list:
-        if "temperature" in attr or attr == "Average Temperature" or "close value" in attr:
+        if "close value" in attr:
             weather_flag = True
             break
     
@@ -1833,8 +1836,9 @@ def get_single_SAX_summary(attr_list,letter_list,letter_map_list,alpha_sizes,TW,
             extra = " intake"
         
         attribute_ = attr_list[i]
-        #if not weather_flag:
-        attribute_ = attribute_.lower()
+        if not weather_flag:
+            attribute_ = attribute_.lower()
+        #input(attribute_)
         summary += particle + " " + attribute_ + extra + " has been " + conclusion_list[i]
         if i == len(attr_list)-1:
             summary += "."
@@ -1923,7 +1927,7 @@ def comparison_TW_SAX_summary(summarizer_type,attr_list,prev_letters,curr_letter
         particle = "your"
         weather_flag = False
         for attr in attr_list:
-            if "temperature" in attr or attr == "Average Temperature" or "close value" in attr:
+            if "close value" in attr:
                 weather_flag = True
                 break
         
@@ -1936,8 +1940,8 @@ def comparison_TW_SAX_summary(summarizer_type,attr_list,prev_letters,curr_letter
                 first = particle + " "
                 
             attribute_ = attr_list[i]
-            #if not weather_flag:
-            attribute_ = attribute_.lower()            
+            if not weather_flag:
+                attribute_ = attribute_.lower()            
                 
             summary += first + attribute_ + " was " + summarizer_list[i] 
             
@@ -4268,12 +4272,13 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
         particle = "your"
         weather_flag = False
         for attr_ in attr_list:
-            if "temperature" in attr_ or attr_ == "Average Temperature":
+            if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
                 weather_flag = True
                 break
         
         if weather_flag:
             particle = "the"
+            
       
         for i in range(len(summarizers1)):
             if len(summarizers1[i]) == 0:
@@ -4282,12 +4287,20 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
                 second += ", and"
                 
             attribute_ = attr_list[i]
-            #if not weather_flag:
-            attribute_ = attribute_.lower()  
+            if not weather_flag:
+                attribute_ = attribute_.lower()
+            elif "close value" in attr_:
+                tmp = attribute_.split(" ")
+                tmp[0] = tmp[0].upper()
+                tmp_str = ""
+                for j in range(len(tmp)):
+                    tmp_str += tmp[j]
+                    if j != len(tmp)-1:
+                        tmp_str += " "
+                attribute_ = tmp_str         
             if attr_list[i] == "breakfast":
                 attribute_ = "carbohydrate intake"
-            #else:
-                #attribute_ = attribute_.capitalize()
+            
             second += " " + particle + " " + attribute_ + " follows the pattern of being "
             for j in range(len(summarizers1[i])):
                 if third != "":
@@ -4312,12 +4325,21 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
             if fourth != "," and i == len(summarizers2)-1:
                 fourth += " and"     
             attribute_ = attr_list[i]
-            #if not weather_flag:
-            attribute_ = attribute_.lower()           
+            if not weather_flag:
+                attribute_ = attribute_.lower()
+            elif "close value" in attr_:
+                tmp = attribute_.split(" ")
+                tmp[0] = tmp[0].upper()
+                tmp_str = ""
+                for j in range(len(tmp)):
+                    tmp_str += tmp[j]
+                    if j != len(tmp)-1:
+                        tmp_str += " "
+                attribute_ = tmp_str
+                
             if attr_list[i] == "breakfast":
                 attribute_ = "carbohydrate intake"            
-            #else:
-                #attribute_ = attribute_.capitalize()            
+         
             fourth += " " + particle + " " + attribute_ + " tends to be "
             for j in range(len(summarizers2[i])):
                 if fifth != "":
