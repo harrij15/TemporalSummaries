@@ -21,7 +21,8 @@ where summarizer is a conclusive phrase for the summary (e.g., "high", "low", et
 
 Our system relies on SAX representations of time-series data [1,3] and temporal/sequence pattern discovery via the SPADE algorithm [8]. SAX representations allow us to convert raw time-series data into symbolic strings containing letters of the alphabet. These representations make it easier for time-series analysis methods to find interesting patterns and anomalies efficiently in the data. Using the SPADE algorithm, we are able to discover frequent sequences, or patterns, in the data. These patterns are considered "frequent" if they are above the specified minimum support threshold, and summaries for these patterns are generated if they are above the specified minimum confidence threshold.
 
-We mainly use data from the Alpha Vantage REST API. Alpha Vantage [2] provides free APIs that allow users to receive real-time and historical financial data.
+We provide sample data from the Alpha Vantage REST API and the National Centers For
+Environmental Information (NCEI). Alpha Vantage [2] provides free APIs that allow users to receive real-time and historical financial data. NCEI [9] provides average temperature and average wind speed data tracked at the daily and hourly granularity by the weather station at the Huntsville International Airport in Huntsville, Alabama. 
 
 ## Implemented Protoforms
 
@@ -93,3 +94,4 @@ A subset of multivariate summaries for Apple and Aetna are shown below. Please n
 6.	Lotfi A. Zadeh. 1983. A computational approach to fuzzy quantifiers in natural languages. Computers & Mathematics with Applications 9, 1 (1983), 149 – 184.
 7.	Lotfi A. Zadeh. 2002. A prototype-centered approach to adding deduction capability to search engines-the concept of protoform. In International IEEE Symposium on Intelligent Systems.
 8.	Mohammed J. Zaki. 2001. SPADE: An Efficient Algorithm for Mining Frequent Sequences. Machine Learning 42, 1 (01 Jan 2001), 31-60.
+9. Matthew J. Menne, Imke Durre, Bryant Korzeniewski, Shelley McNeal, Kristy Thomas, Xungang Yin, Steven Anthony, Ron Ray, Russell S.Vose, Byron E.Gleason, and Tamara G. Houston. 2020.   Global Historical Climatology Network - Daily (GHCN-Daily), Version 3. https://www.ncei.noaa.gov/.
