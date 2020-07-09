@@ -1061,13 +1061,1124 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
         return summary
                 
     return ""
+
+def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=None,activity_level=None,arm_filepath=None):
+    if "close value" in key_list: 
+        for i in range(len(key_list)):
+            key_list[i] = pid_list[i] + " " + key_list[i]
+    if "Activity" not in key_list and tw > 0.04 and attr != "MyFitnessPalMeals":
+        past_tw_letters = []        
+        first = singular_TW.capitalize() + "ly "
+        summarizer_type = "Weekly "
+        if attr == "Heart Rate":
+            index = key_list.index("Heart Rate")
+            hr = sum(past_full_wks[index])/tw
+            tw_summary, tw_summarizers = HR_Summary(hr,age,activity_level,singular_TW)
+        else:
+            for i in range(len(key_list)):
+                past_tw_letters.append(tw_sax_list[i][-1])
+                summarizer_type += key_list[i]
+                
+                if i != len(key_list)-1:
+                    summarizer_type += " and "        
+            
+            tw_summary, tw_summarizers = get_single_SAX_summary(key_list,
+                                                                past_tw_letters,
+                                                                letter_map_list,
+                                                                alpha_sizes,
+                                                                singular_TW,
+                                                                tw_size=tw,
+                                                                past_tw=past_full_wks,
+                                                                age=age,
+                                                                activity_level=activity_level)
+        
+        if tw_summary != None:
+            length = get_summary_length(len(tw_summarizers))
+            simplicity = get_simplicity(len(tw_summarizers)+1)
+            
+            query_ = [["current index",[len(tw_sax)-1]]]   
+            t3, coverage = degree_of_covering(key_list,tw_sax_list,tw_summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+            t4 = degree_of_appropriateness(key_list,tw_sax_list,tw_summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)
+            
+            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    summ_str = ""
+                    for j in range(len(key_list)):
+                        key_list_str += key_list[j]
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+                    
+                    for j in range(len(tw_summarizers)):
+                        summ_str += tw_summarizers[j]
+                        if j != len(tw_summarizers)-1:
+                            summ_str += ", "                                   
+                    datawriter.writerow([pid,key_list_str,tw,'SETW','',summ_str])              
+            
+            return [tw_summary,t3,coverage,t4,length,simplicity,first]
+        
+    return [None]*7
+
+def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None):
+    summarizer_type = "Past Daily TW - "
+    for i in range(len(key_list)):
+        summarizer_type += key_list[i]
+        
+        if i != len(key_list)-1:
+            summarizer_type += " and "
+            
+    summarizer_7 = ["extremely low","very low","low","moderate","high","very high","extremely high"]
     
+    summarizer_list = []
+    for i in range(len(key_list)):
+        summarizers = ["very low","low","moderate","high","very high"]
+        
+        if alpha_sizes[i] == 7:
+            summarizers = summarizer_7                    
+        summarizer_list.append(summarizers)
+                
+    avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizer_list,
+                                                                                           summarizer_type,
+                                                                                           key_list,
+                                                                                           sax_list,
+                                                                                           letter_map_list,
+                                                                                           alpha_sizes,
+                                                                                           alpha,
+                                                                                           xval="days",
+                                                                                           TW=TW)
+    
+    if quantifier_list == None:
+        return [None]*8
+    
+    index = best_quantifier_index(quantifier_list,t1_list)
+    if quick:
+        return [[summary_list[index]],[t1_list[index]]]
+    
+    daily_summary = summary_list[index]
+    summarizer_list = summarizer_list[index]
+    truth = t1_list[index]
+    average = avg_list[index]
+    if daily_summary != None:
+        length = get_summary_length(len(summarizer_list))
+        simplicity = get_simplicity(len(summarizer_list)+1)
+        query_ = [["through",start_day,end_day]]
+        
+        t2 = degree_of_imprecision(avg_list)
+        t3, coverage = degree_of_covering(key_list,sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+        t4 = degree_of_appropriateness(key_list,sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
+        
+        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+            with open(arm_filepath,"a",newline='') as csvfile:
+                pid = pid_list[df_index]
+                datawriter = csv.writer(csvfile)
+                key_list_str = ""
+                summ_str = ""
+                q_str = ""
+                for j in range(len(key_list)):
+                    key_list_str += key_list[j]
+                    if j != len(key_list)-1:
+                        key_list_str += ", "
+                
+                for j in range(len(summarizer_list)):
+                    summ_str += summarizer_list[j]
+                    if j != len(summarizer_list)-1:
+                        summ_str += ", "      
+                        
+                datawriter.writerow([pid,key_list_str,tw,'SEsTW',quantifier_list[index],summ_str])        
+        
+        return [daily_summary, truth, t2, t3, coverage, t4, length, simplicity]
+    
+    return [None]*8   
+
+def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,TW,age,activity_level,day_sax=None,arm_filepath=None):
+    summarizer_type = "Past Daily TW w/ Qualifier- "
+    for i in range(len(key_list)):
+        summarizer_type += key_list[i]
+    
+        if i != len(key_list)-1:
+            summarizer_type += " and " 
+            
+    summarizers = ["very low","low","moderate","high","very high"]
+    
+    summarizer_list = []
+    for i in range(len(key_list)):
+        if alpha_sizes[i] == 7:
+            summarizers = summarizer_7        
+        summarizer_list.append(summarizers)   
+        
+    if attr == "MyFitnessPalMeals":
+        summarizer_list = [summarizer_list[0]]
+        
+    from itertools import combinations
+    key_combos = []
+    for i in range(len(key_list)):
+        key_comb = combinations(key_list,i+1)
+        key_combos.append(list(key_comb))  
+    
+    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = [], [], [], [], [], [], [], []
+    
+    # TODO: get rid of repeats
+    for key_combo in key_combos:
+        for flag_ in key_combo:
+            flag_ = list(flag_)
+            if len(flag_) == len(key_list) or attr == "MyFitnessPalMeals":
+                continue
+            
+            avg_list, t1_list, quantifier_list, summary_list, summarizers_list = generate_summaries(summarizer_list,
+                                                                                                    summarizer_type,
+                                                                                                    key_list,
+                                                                                                    past_tw_list,
+                                                                                                    letter_map_list,
+                                                                                                    alpha_sizes,
+                                                                                                    alpha,
+                                                                                                    TW=TW,
+                                                                                                    xval="days",
+                                                                                                    flag=flag_)
+            if quantifier_list != None:
+                index = best_quantifier_index(quantifier_list,t1_list)
+                summary = summary_list[index]
+                summarizers_list = summarizers_list[index]
+                truth = t1_list[index]
+                average = avg_list[index]
+                
+                length = get_summary_length(len(summarizers_list))
+                simplicity = get_simplicity(len(summarizers_list)+len(flag_)+1)
+                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",start_day,end_day]]
+                t2 = degree_of_imprecision(avg_list)
+                t3, coverage = degree_of_covering(key_list,past_tw_list,summarizers_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+                t4 = degree_of_appropriateness(key_list,past_tw_list,summarizers_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
+                
+                summaries.append(summary)
+                truth_list.append(truth)
+                t2_list.append(t2)
+                t3_list.append(t3)
+                coverage_list.append(coverage)
+                t4_list.append(t4)
+                length_list.append(length)
+                simplicity_list.append(simplicity)
+                
+    
+    if len(summaries) == 0:
+        return [None]*9
+    
+    if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+        with open(arm_filepath,"a",newline='') as csvfile:
+            pid = pid_list[df_index]
+            datawriter = csv.writer(csvfile)
+            key_list_str = ""
+            summ_str = ""
+            flag_str = ""
+            q_str = ""
+            index_list = []
+            for j in range(len(key_list)):
+                if key_list[j] in flag_:
+                    continue
+                
+                key_list_str += key_list[j]
+                index_list.append(j)
+                if j != len(key_list)-1:
+                    key_list_str += ", "
+              
+                    
+            for j in range(len(flag_)):
+                flag_str += flag_[j]
+                j_ = key_list.index(flag_[j])
+                index_list.append(j_)
+                if j != len(flag_)-1:
+                    flag_str += ", "      
+                    
+            for j in range(len(index_list)):
+                index_ = index_list[j]
+                summ_str += summarizers_list[index_]
+                if j != len(index_list)-1:
+                    summ_str += ", "    
+                    
+            datawriter.writerow([pid,key_list_str.strip(', ')+"|"+flag_str.strip(', '),tw,'SEsTWQ',quantifier_list[index],summ_str,flag_str])    
+    
+    return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, flag_]
+                
+def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,age=None,activity_level=None,arm_filepath=None):
+    if ("Activity" not in key_list and tw_sax_list != None and len(tw_sax_list) != 0) or tw == 0.04:
+        error = False
+        summarizer_type = "Weekly " 
+        prev_tw_letters = []
+        past_tw_letters = []
+        if tw == 0.04:
+            tw_sax_list = sax_list
+        first_index = len(tw_sax_list[0])-2
+        second_index = len(tw_sax_list[0])-1
+        for i in range(len(key_list)):
+            if len(tw_sax_list[i]) < 2:
+                error = True
+                continue
+            past_tw_letters.append(tw_sax_list[i][second_index])
+            prev_tw_letters.append(tw_sax_list[i][first_index])
+                
+            summarizer_type += key_list[i]
+        
+            if i != len(key_list)-1:
+                summarizer_type += " and "    
+        
+        if not error:
+            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index,second_index,flag="eval")
+            if comparison_summary != None:
+                length = get_summary_length(len(summarizer_list))
+                simplicity = get_simplicity(len(summarizer_list)+1) 
+                
+                if second_index == -1:
+                    past_ = len(tw_sax)-1
+                else:
+                    past_ = second_index
+                    
+                if first_index == -1:
+                    prev_ = len(tw_sax)-1
+                else:
+                    prev_ = first_index   
+                
+                query_ = [["current index",[past_,prev_]]]
+                flag_ = "compare"
+                if attr == "Heart Rate":
+                    flag_ = "compareHR"
+                    
+                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
+                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)  
+                
+                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                    with open(arm_filepath,"a",newline='') as csvfile:
+                        pid = pid_list[df_index]
+                        datawriter = csv.writer(csvfile)
+                        key_list_str = ""
+                        summ_str = ""
+                        flag_str = ""
+                        q_str = ""
+                        index_list = []
+                        for j in range(len(key_list)):
+                            key_list_str += key_list[j]
+                            if j != len(key_list)-1:
+                                key_list_str += ", "
+                          
+                                
+                        for j in range(len(summarizer_list)):
+                            summ_str += summarizer_list[j]
+                            if j != len(summarizer_list)-1:
+                                summ_str += ", "         
+                                
+                        datawriter.writerow([pid,key_list_str,tw,'EC',None,summ_str,None])                
+                
+                return [comparison_summary, t3, coverage, t4, length, simplicity]
+            
+    return [None]*6
+
+def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,prev_start_day,start_day,end_day,age=None,activity_level=None,day_list=None,arm_filepath=None):
+    weather_flag = False
+    for attr_ in attr_list:
+        if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
+            weather_flag = True
+            break
+    
+    if not weather_flag and attr != "MyFitnessPalMeals":
+        first_index = len(tw_sax_list[0])-2
+        second_index = len(tw_sax_list[0])-1        
+
+        summarizer_type = "Weekly Goal " 
+        prev_tw_letters = []
+        past_tw_letters = []    
+        past_index = int(len(tw_sax_list[0])/2)-1
+        prev_index = -2                    
+        error = False
+        for i in range(len(key_list)):
+            if key_list[i] == "Heart Rate":
+                prev_tw_letters.append(sum(data_list[i][prev_start_day:start_day])/7)
+                past_tw_letters.append(sum(data_list[i][start_day:end_day])/7)
+                if len(tw_sax_list[i]) < 2:
+                    error = True
+                    continue
+            elif key_list[i] == "Activity":
+                other_day = data_dict[day_list[0]]
+                prev_day = data_dict[day_list[-2]]
+                curr_day = data_dict[day_list[-1]]                        
+                prev_tw_letters.append(prev_day)
+                past_tw_letters.append(curr_day)
+            else:        
+
+                if len(tw_sax_list) == 0 or len(tw_sax_list[i]) < 2:
+                    error = True
+                    continue  
+                past_tw_letters.append(tw_sax_list[i][past_index])            
+                prev_tw_letters.append(tw_sax_list[i][prev_index])
+            
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count" 
+                
+            summarizer_type += key_list[i]
+            
+            if i != len(key_list)-1:
+                summarizer_type += " and "    
+                
+        if not error:
+
+            if key_list[i] == "Heart Rate":
+                prev_tw_letters = [prev_tw_letters]
+                past_tw_letters = [past_tw_letters]
+            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index,second_index,age=age,activity_level=activity_level)
+
+            if comparison_summary != None:
+                length = get_summary_length(len(summarizer_list))
+                simplicity = get_simplicity(len(summarizer_list)+1) 
+                
+                if past_index == -1:
+                    past_ = len(tw_sax)-1
+                else:
+                    past_ = past_index
+                    
+                if prev_index == -1:
+                    prev_ = len(tw_sax)-1
+                else:
+                    prev_ = prev_index   
+                
+                query_ = [["current index",[past_,prev_]]]    
+                
+                flag_ = "compare"
+                if attr == "Heart Rate":
+                    flag_ = "compareHRGoal" 
+                    
+                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
+                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)   
+                
+                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                    with open(arm_filepath,"a",newline='') as csvfile:
+                        pid = pid_list[df_index]
+                        datawriter = csv.writer(csvfile)
+                        key_list_str = ""
+                        summ_str = ""
+                        goal_str = ""
+                        index_list = []
+                        for j in range(len(key_list)):
+                            key_list_str += key_list[j]
+                            if j != len(key_list)-1:
+                                key_list_str += ", "
+                
+                        for j in range(len(summarizer_list)):
+                            summ_str += summarizer_list[j]
+                            if j != len(summarizer_list)-1:
+                                summ_str += ", "  
+                                
+                        for j in range(len(goal_list)):
+                            goal_str += goal_list[j]
+                            if j != len(goal_list)-1:
+                                goal_str += ", "                                          
+                        datawriter.writerow([pid,key_list_str,tw,'GC',None,summ_str,goal_str])                
+                
+                return [comparison_summary, t3, coverage, t4, length, simplicity]
+            
+    return [None]*6
+
+def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None):
+    weather_flag = False
+    for attr_ in attr_list:
+        if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
+            weather_flag = True
+            break
+    
+    if attr != "Stock Market Data" and "close value" not in attr and ("temperature" not in attr or attr != "Average Temperature") and not weather_flag and attr != "MyFitnessPalMeals":
+        sub_dict = dict()
+        guideline_summarizers = ["reached","did not reach"]
+        if attr == "StepUp" or ada_goal != None:
+            guideline_summarizers = ["reached"]
+        summarizers_list = []
+        for i in range(len(key_list)):
+            summarizers_list.append(guideline_summarizers)
+        if attr == "Activity":
+            past_tw = []
+            for letter in summary_data:
+                past_tw.append(categ_eval(letter))
+                
+        summarizer_type = "Goal Evaluation - "
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"  
+                
+            summarizer_type += key_list[i]
+            if i != len(key_list)-1:
+                summarizer_type += " and "
+            
+        input_goals = [goals]
+        if attr == "MyFitnessPal":
+            input_goals = goals
+            
+        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,past_tw_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,TW=TW,goals=input_goals,ada_goal=ada_goal)
+        
+        if quantifier_list != None:
+            index = best_quantifier_index(quantifier_list,t1_list)
+            goal_summary = summary_list[index]
+            summarizers = summarizer_list[index]
+            truth = t1_list[index]
+            average = avg_list[index]
+        
+            query_ = [["through",start_day,end_day]]
+            if attr == "StepUp" or attr == "MyFitnessPal" or attr == "MyFitnessPalMeals":
+                
+                t3, coverage = degree_of_covering(key_list,data_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals,quantifier=quantifier_list[index])
+            else:
+                flag_ = None
+                if attr == "Heart Rate":
+                    flag_ = "HR"                            
+                t3, coverage = degree_of_covering(key_list,data_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals[0],flag=flag_)
+            
+            t4 = degree_of_appropriateness(key_list,data_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,goals=input_goals)
+            
+            length = get_summary_length(len(summarizers))
+            simplicity = get_simplicity(len(summarizers)+1)
+            t2 = degree_of_imprecision(avg_list)
+            
+            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    summ_str = ""
+                    goal_str = ""
+                    index_list = []
+                    for j in range(len(key_list)):
+                        key_list_str += key_list[j]
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+            
+                    for j in range(len(summarizers)):
+                        summ_str += summarizers[j]
+                        if j != len(summarizers)-1:
+                            summ_str += ", "  
+                            
+                    for j in range(len(key_list)):
+                        if key_list[j] == "StepUp" or key_list[j] == "Step Count":
+                            goal_str += "above their baseline"
+                        else:
+                            goal_str += "low"
+                        if j != len(key_list)-1:
+                            goal_str += ", "                                          
+                            
+                    datawriter.writerow([pid,key_list_str,tw,'GE',quantifier_list[index],summ_str,goal_str])            
+            
+            return [goal_summary, truth, t2, t3, coverage, t4, length, simplicity]
+        
+    return [None]*8
+
+def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,activity_level,data_dict=None,arm_filepath=None):
+    import pandas as pd
+    if attr != "MyFitnessPalMeals":
+        trend_lists = []
+        for i in range(len(key_list)):
+            data = data_list[i]
+            if key_list[i] == "Activity":
+                            
+                # Different approach for categorical data
+                trend_list = []
+                lim = len(data_dict.keys())-1
+                
+                # Walking -> active; else -> not active
+                for i in range(len(sorted(data_dict.keys()))-1):
+                    curr_key = data_dict.keys()[i]
+                    next_key = data_dict.keys()[i+1]
+                    
+                    # Compare active counts
+                    trend_list.append(data_dict[curr_key].count("w") - data_dict[next_key].count("w"))   
+            else:
+                trend_list = pd.DataFrame(data).diff().values.T.tolist() 
+                trend_list = trend_list[0]    
+                
+            
+            trend_lists.append(trend_list)
+        
+        trend_summarizers = ["increases","decreases","does not change"]
+        summarizers_list = []
+        for i in range(len(key_list)):
+            summarizers_list.append(trend_summarizers) 
+            
+        summarizer_type = "Trends " 
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"   
+                
+            summarizer_type += key_list[i]
+            if i != len(key_list)-1:
+                summarizer_type += " and "     
+
+        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,trend_lists,letter_map_list,alpha_sizes,alpha,TW=TW)
+        if quantifier_list != None:
+            index = best_quantifier_index(quantifier_list,t1_list)
+            trend_summary = summary_list[index]
+            summarizers = summarizer_list[index]
+            truth = t1_list[index]
+            average = avg_list[index]
+            
+            t3, coverage = degree_of_covering(key_list,trend_lists,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,flag=None)
+            t4 = degree_of_appropriateness(key_list,trend_lists,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)               
+            length = get_summary_length(len(summarizers))
+            simplicity = get_simplicity(len(summarizers))
+            t2 = degree_of_imprecision(avg_list)
+            
+            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    summ_str = ""
+                    goal_str = ""
+                    index_list = []
+                    for j in range(len(key_list)):
+                        key_list_str += key_list[j]
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+            
+                    for j in range(len(summarizers)):
+                        summ_str += summarizers[j]
+                        if j != len(summarizers)-1:
+                            summ_str += ", "  
+                               
+                    datawriter.writerow([pid,key_list_str,tw,'ST',quantifier_list[index],summ_str,None])              
+            
+            return [trend_summary, truth, t2, t3, coverage, t4, length, simplicity]
+        
+    return [None]*8
+
+def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=None):
+    if "Activity" not in key_list and TW != None and TW != "hours":
+        combined_sax = []
+        sep_sax_list = []
+        for i in range(len(sax_list)):
+            sep_sax_list.append([list(sax_list[i][j:j+tw]) for j in range(0,len(sax_list[i]),tw)])
+            
+        chunked_sax = sep_sax_list[0]
+        for i in range(1,len(sep_sax_list)):
+            
+            for j in range(len(sep_sax_list[i])):
+                for k in range(len(sep_sax_list[i][j])):
+                    chunked_sax[j][k] += "-" + sep_sax_list[i][j][k]
+                 
+        cluster_data = None
+        indices = None
+        try:
+            tw_index = -1
+            [cluster_data, indices] = series_clustering(full_sax_rep,tw_sax_list,tw,flag=chunked_sax,week_index=tw_index)
+        except TypeError:
+            cluster_data = None
+            indices = None
+        
+        pattern_summarizers = ["rose","dropped","stayed the same"]
+        summarizers_list = []
+        for i in range(len(key_list)):
+            summarizers_list.append(pattern_summarizers)  
+            
+        if cluster_data != None and len(cluster_data) != None:
+            summarizer_type = "Pattern Recognition - " 
+            for i in range(len(key_list)):
+                if key_list[i] == "step count":
+                    key_list[i] = "Step Count"      
+                    
+                summarizer_type += key_list[i]
+                if i != len(key_list)-1:
+                    summarizer_type += " and "  
+            
+            avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,cluster_data,letter_map_list,alpha_sizes,alpha,tw_index=tw_index)
+
+            extension = "In " + TW[:-1] + " " + str(tw_index) + ","
+            last_summarizer = ""
+            num_summarizers = 0
+            temp_flag = False
+            if type(attr_list) is list:
+                for j in range(len(attr_list)):
+                    if "temperature" in attr_list[j] or attr_list[j] == "Average Temperature":
+                        temp_flag = True
+            else:
+                if "temperature" in attr_list or attr_list == "Average Temperature":
+                    temp_flag = True                            
+            for i in range(len(key_list)):
+                summary_data = summary_data_list[i]
+                
+                attribute_ = key_list[i]
+                if not temp_flag:
+                    attribute_ = attribute_.lower()                                
+                extension += " your " + attribute_ + " was"
+                for letter in summary_data:
+                    summarizer = evaluateSAX(letter,letter_map_list[i],alpha_sizes[i])
+                    if last_summarizer != summarizer:
+                        if last_summarizer != "":
+                            extension += ", then "
+                        else:
+                            extension += " " 
+                        extension += summarizer
+                        last_summarizer = summarizer
+                        num_summarizers += 1
+                        
+                if i != len(summary_data_list)-1:
+                    extension += " and"
+                last_summarizer = ""
+                    
+            extension += "."
+            
+            if quantifier_list != None:
+                index = best_quantifier_index(quantifier_list,t1_list)
+                cluster_summary = summary_list[index]
+                summarizers = summarizer_list[index]
+                truth = t1_list[index]
+                
+                cluster_summary = extension + " " + cluster_summary
+                
+                query_ = [["current index", indices]]
+                
+                
+                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag="compare")
+                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")
+                    
+                # To count the summarizer in pattern_summarizers
+                num_summarizers += len(key_list)
+                length = get_summary_length(num_summarizers)
+                simplicity = get_simplicity(num_summarizers+1)
+                t2 = degree_of_imprecision(avg_list)
+                
+                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                    with open(arm_filepath,"a",newline='') as csvfile:
+                        pid = pid_list[df_index]
+                        datawriter = csv.writer(csvfile)
+                        key_list_str = ""
+                        summ_str = ""
+                        goal_str = ""
+                        index_list = []
+                        for j in range(len(key_list)):
+                            key_list_str += key_list[j]
+                            if j != len(key_list)-1:
+                                key_list_str += ", "
+                
+                        for j in range(len(summarizers)):
+                            summ_str += summarizers[j]
+                            if j != len(summarizers)-1:
+                                summ_str += ", "  
+                                   
+                                
+                        datawriter.writerow([pid,key_list_str,tw,'CB',None,summ_str,None])                   
+                
+                return [cluster_summary, truth, t2, t3, coverage, t4, length, simplicity, tw_index, cluster_data]
+            
+    return [None]*10
+
+def generateSP(key_list,cluster_data,tw_index,arm_filepath=None):
+    if cluster_data != None:
+        num_summarizers = 0
+        first_letters = []
+        second_letters = []
+        for i in range(len(cluster_data)):
+            first_letters.append(cluster_data[i][-1][0])
+            second_letters.append(cluster_data[i][-1][1])
+            
+        num_summarizers = len(first_letters)
+        sp_summary, summarizer_list = standard_pattern_summary(first_letters,second_letters,key_list,tw_index) 
+        
+        query_ = [["current index", [indices[-1]]]]
+        t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag="compare")
+        t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")                    
+        length = get_summary_length(num_summarizers)
+        simplicity = get_simplicity(num_summarizers+1)
+        
+        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+            with open(arm_filepath,"a",newline='') as csvfile:
+                pid = pid_list[df_index]
+                datawriter = csv.writer(csvfile)
+                key_list_str = ""
+                summ_str = ""
+                goal_str = ""
+                index_list = []
+                for j in range(len(key_list)):
+                    key_list_str += key_list[j]
+                    if j != len(key_list)-1:
+                        key_list_str += ", "
+        
+                for j in range(len(summarizer_list)):
+                    summ_str += summarizer_list[j]
+                    if j != len(summarizer_list)-1:
+                        summ_str += ", "  
+                           
+                        
+                datawriter.writerow([pid,key_list_str,tw,'SP',None,summ_str,None])        
+        
+        return [sp_summary, t3, coverage, t4, length, simplicity]
+    
+    return [None]*6
+
+def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_dict,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,date_column,age,activity_level,hr_sax=None):
+    if tw > 0.04:
+        summarizer_type = "If-then pattern "
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"   
+                
+            summarizer_type += key_list[i]
+            if i != len(key_list)-1:
+                summarizer_type += " and " 
+        
+        if attr == "Heart Rate":
+            sax_list = [hr_sax]
+            
+        summary_list, supports, proto_cnt_, numsum_list, summarizers_list = analyze_patterns(key_list,sax_list,alphabet_list,letter_map_list,weekday_dict,tw,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt)
+        weekday_summaries, supports_, proto_cnt_, numsum_list_, summarizers_list_ = analyze_patterns(key_list,sax_list,alphabet_list,letter_map_list,weekday_dict,tw,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,weekdays=date_column)    
+        
+        if proto_cnt_ != None:
+            proto_cnt = proto_cnt_
+        
+        if len(summary_list) != 0:
+            t3_list = []
+            t4_list = []
+            coverage_list = []
+            length_list = []
+            simplicity_list = []
+            
+            t3_list_ = []
+            t4_list_ = []
+            coverage_list_ = []
+            length_list_ = []
+            simplicity_list_ = []
+            
+            for i in range(len(summary_list)):
+                summ_index = 0
+                summ_list = []
+                while summ_index < len(key_list) and (attr == "MyFitnessPalMeals" and summ_index == 0):
+                    sublist = []
+                    
+                    for j in range(len(summarizers_list[i])):
+                        sublist += summarizers_list[i][j][summ_index]
+                    summ_list.append(sublist)
+                    summ_index += 1               
+                
+                if attr == "Heart Rate":
+                    sax_list = [data]    
+                    
+                t3_list.append(supports[i])
+                t4_list.append(degree_of_appropriateness(key_list,sax_list,summ_list,summarizer_type,supports[i],letter_map_list,alpha_sizes,age,activity_level))
+                coverage_list.append(wu_mendel(supports[i]))
+                length_list.append(numsum_list[i])
+                simplicity_list.append(numsum_list[i]+1)
+                
+            for i in range(len(weekday_summaries)):
+                
+                summ_index = 0
+                summ_list_ = []      
+                while summ_index < len(key_list) and (attr == "MyFitnessPalMeals" and summ_index == 0): 
+                    sublist = []  
+                    for j in range(len(summarizers_list_[i])):
+                        sublist += summarizers_list_[i][j][summ_index]
+                    summ_list_.append(sublist)
+                    summ_index += 1                
+                
+                t3_list_.append(supports_[i])
+                t4_list_.append(degree_of_appropriateness(key_list,sax_list,summ_list_,summarizer_type,supports_[i],letter_map_list,alpha_sizes,age,activity_level))
+                coverage_list_.append(wu_mendel(supports_[i]))
+                length_list_.append(numsum_list_[i])
+                simplicity_list_.append(numsum_list_[i]+1) 
+            
+            return [summary_list, t3_list, t4_list, coverage_list, length_list, simplicity_list, weekday_summaries, t3_list_, t4_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt]
+        
+    output = [None]*13
+    output[-1] = proto_cnt
+    return output
+  
+def generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,arm_filepath=None):
+    if tw > 0 and attr != "MyFitnessPalMeals":
+        summarizer_type = "Past Daily TW - Generalized If-Then "
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"    
+            elif key_list[i] == "heart rate":
+                key_list[i] = "Heart Rate"
+            
+                
+            summarizer_type += key_list[i]
+        
+            if i != len(key_list)-1:
+                summarizer_type += " and " 
+                
+        summarizers = ["very low","low","moderate","high","very high"]
+                                   
+        summarizer_list = []
+        for i in range(len(key_list)):
+            if alpha_sizes[i] == 7:
+                summarizers = summarizer_7             
+            if key_list[i] == "Heart Rate" or key_list[i] == "heart rate":
+                summarizer_list.append(hr_summarizers)                                 
+            else:
+                summarizer_list.append(summarizers)      
+        
+        from itertools import combinations
+        key_combos = []
+        for i in range(len(key_list)):
+            key_comb = combinations(key_list,i+1)
+            key_combos.append(list(key_comb))  
+        
+        summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = [], [], [], [], [], [], [], []
+        
+        for key_combo in key_combos:
+            for flag_ in key_combo:
+                flag_ = list(flag_)          
+                
+                avg_list, t1_list, quantifier_list, summary_list, summarizers = generate_summaries(summarizer_list,summarizer_type,key_list,sax_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,xval="days",flag=flag_)
+                if quantifier_list != None:
+                    quantifier_list = [quantifier for quantifier in quantifier_list if quantifier == "all of the"]
+                    if len(quantifier_list) != 0:
+                        index = best_quantifier_index(quantifier_list,t1_list)
+                        summary = summary_list[index]
+                        summarizers = summarizers[index]
+                        truth = t1_list[index]
+                        
+                        query_ = [["qualifier",flag_,summarizers,alphabet_list]]
+                        flag = None
+                        if "Heart Rate" in key_list:
+                            flag = "HR"
+                        t3, coverage = degree_of_covering(key_list,sax_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag)
+                        t4 = degree_of_appropriateness(key_list,sax_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag=flag)
+                     
+                        length = get_summary_length(len(summarizers))
+                        simplicity = get_simplicity(len(flag_)+len(summarizers))
+                        t2 = degree_of_imprecision(avg_list)                        
+                        
+                        summaries.append(summary)
+                        truth_list.append(truth)
+                        t2_list.append(t2)
+                        t3_list.append(t3)
+                        coverage_list.append(coverage)
+                        t4_list.append(t4)
+                        length_list.append(length)
+                        simplicity_list.append(simplicity)
+                        
+        if len(summaries) != 0:
+            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    summ_str = ""
+                    flag_str = ""
+                    q_str = ""
+                    index_list = []
+                    for j in range(len(key_list)):
+                        if key_list[j] in flag_:
+                            continue
+                        
+                        key_list_str += key_list[j]
+                        index_list.append(j)
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+                      
+                            
+                    for j in range(len(flag_)):
+                        flag_str += flag_[j]
+                        j_ = key_list.index(flag_[j])
+                        index_list.append(j_)
+                        if j != len(flag_)-1:
+                            flag_str += ", "      
+                            
+                    for j in range(len(index_list)):
+                        index_ = index_list[j]
+                        summ_str += summarizers[index_]
+                        if j != len(index_list)-1:
+                            summ_str += ", "    
+                            
+                    datawriter.writerow([pid,key_list_str.strip(', ')+"|"+flag_str.strip(', '),tw,'GIT',quantifier_list[index],summ_str,flag_str])            
+            
+            return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list]
+                        
+        return [None]*8
+
+def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None):
+    weekdays = list(set(date_column))
+    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = [], [], [], [], [], [], [], []
+    for weekday in weekdays:
+        if TW == "hours":
+            break
+        
+        summarizer_type = "Day-based pattern summary - " 
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"    
+                
+            summarizer_type += key_list[i]
+            if i != len(key_list)-1:
+                summarizer_type += " and "              
+      
+        weekday_data_list = []
+        weekday_index_list = []
+        day_summ_list = []
+        day_summarizers = ["very low","low","moderate","high","very high"]
+                              
+        for j in range(len(key_list)):
+            if alpha_sizes[j] == 7:
+                day_summarizers = summarizer_7              
+            if key_list[j] == "Heart Rate" or attr == "MyFitnessPalMeals":
+                weekday_data = [data[k] for k in range(len(date_column)) if date_column[k] == weekday]
+            elif attr == "Activity":
+                full_day_sax = ""
+                for day in day_list:
+                    full_day_sax += data_dict[day]
+                weekday_data = [full_day_sax[k] for k in range(len(date_column)) if date_column[k] == weekday]
+            else:
+                weekday_data = [sax_list[j][k] for k in range(len(date_column)) if date_column[k] == weekday]
+            weekday_indices = [k for k in range(len(date_column)) if date_column[k] == weekday]
+            
+            weekday_data_list.append(weekday_data)
+            weekday_index_list.append(weekday_indices)
+            
+            if key_list[j] == "Heart Rate" or key_list[j] == "heart rate":
+                key_list[j] = "Heart Rate"
+                day_summ_list.append(hr_summarizers)
+            elif attr == "MyFitnessPalMeals":
+                day_summ_list = [carb_summarizers]
+            else:
+                day_summ_list.append(day_summarizers)
+        
+        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(day_summ_list,summarizer_type,key_list,weekday_data_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,xval=weekday)
+        if summary_list != None:
+            index = best_quantifier_index(quantifier_list,t1_list)
+            day_summary = summary_list[index]
+            summarizers = summarizer_list[index]
+            truth = t1_list[index]          
+            average = avg_list[index]
+            
+            indices = [index for index in weekday_indices]
+
+            query_ = [["current index", indices]]
+            flag_ = None
+            if attr == "Heart Rate":
+                flag_ = "HR"
+
+            t3, coverage = degree_of_covering(key_list,sax_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
+            t4 = degree_of_appropriateness(key_list,sax_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag=flag_)
+            length = get_summary_length(len(summarizers))
+            simplicity = get_simplicity(len(summarizers)+1)
+            t2 = degree_of_imprecision(avg_list)  
+            
+            summaries.append(day_summary)
+            truth_list.append(truth)
+            t2_list.append(t2)
+            t3_list.append(t3)
+            coverage_list.append(coverage)
+            t4_list.append(t4)
+            length_list.append(length)
+            simplicity_list.append(simplicity)        
+            
+    if len(summaries) != 0:
+        
+        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+            with open(arm_filepath,"a",newline='') as csvfile:
+                pid = pid_list[df_index]
+                datawriter = csv.writer(csvfile)
+                key_list_str = ""
+                summ_str = ""
+                flag_str = ""
+                q_str = ""
+                index_list = []
+                for j in range(len(key_list)):
+                    
+                    key_list_str += key_list[j]
+                    index_list.append(j)
+                    if j != len(key_list)-1:
+                        key_list_str += ", "
+                                                                                      
+                for j in range(len(summarizers)):
+                    summ_str += summarizers[j]
+                    if j != len(summarizers)-1:
+                        summ_str += ", "    
+                        
+                datawriter.writerow([pid,key_list_str+'|'+weekday,tw,'DB',quantifier_list[index],summ_str,weekday])
+                
+        return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list]
+                        
+    return [None]*8
+
+def generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None):
+    if tw > 0 and attr != "MyFitnessPalMeals":
+        last_weeks = dict()
+        for key in key_list:
+            if key != "date" and key != "ActivFit":
+                tmp = key.split(" ")
+                key_str = ""
+                for i in range(len(tmp)):
+                    key_str += tmp[i].capitalize()
+                    if i != len(tmp)-1:
+                        key_str += " "
+                
+                if key == "Calorie Intake":
+                    last_weeks[key] = sum(list(df_list["Calories"][start_day:end_day]))/float(tw)
+                else:
+                    try:   
+                        key = key_str.replace(" Intake","s")     
+                        if key == "Step Count":
+                            key = "Step Count"
+                        if key == "Stock Market Data":
+                            key = "close value"  
+                        if key == "Average Temperature":
+                            key = "Average Temperature"
+                          
+                        last_weeks[key] = sum(list(df_list[key][start_day:end_day]))/float(tw)
+                    except KeyError:
+                        key = key_str.replace(" Intake","") 
+                        if key == "Step Count":
+                            key = "Step Count"        
+                        if key == "Close Value":
+                            key = "close value"
+                        if key == "Aapl Close Value":
+                            key = "AAPL close value"
+                        if key == "Aet Close Value":
+                            key = "AET close value" 
+                        if key == "Alabama Temperature":
+                            key = "Alabama temperature"                                        
+                        if key == "Alaska Temperature":
+                            key = "Alaska temperature"
+                        last_weeks[key] = sum(list(df_list[key][start_day:end_day]))/float(tw)                        
+                
+        goal_dict = goal_assistance("2000-cal",last_weeks)
+        num_summarizers = len(goal_dict.keys())
+        if goal_dict and num_summarizers>0:
+            summary = get_protoform("Goal Assistance",list(goal_dict.keys()),None,list(goal_dict.values()),qualifier_info=["2000-calorie diet"])
+            if summary != "":
+                length = get_summary_length(num_summarizers)
+                simplicity = get_simplicity(num_summarizers)
+                
+                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                    with open(arm_filepath,"a",newline='') as csvfile:
+                        pid = pid_list[df_index]
+                        datawriter = csv.writer(csvfile)
+                        key_list_str = ""
+                        summ_str = ""
+                        flag_str = ""
+                        q_str = ""
+                        index_list = []
+                        for j in range(len(key_list)):
+                            
+                            key_list_str += key_list[j]
+                            try:
+                                if key_list[j] == "Carbohydrate Intake":
+                                    summ_str += goal_dict["Carbohydrates"]
+                                else:
+                                    summ_str += goal_dict[key_list[j]]
+                            except KeyError:
+                                if j != len(key_list)-1:
+                                    key_list_str += ", "                                                
+                                continue
+                            
+                            if j != len(key_list)-1:
+                                key_list_str += ", "
+                                summ_str += ", "   
+                                
+                        datawriter.writerow([pid,key_list_str,tw,'GA',None,summ_str,None])                
+                
+                return [summary, length, simplicity]
+            
+    return [None]*3
+                
 def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,subindex_list,sublists,letter_map,alpha_size,age,activity_level,goals=None):
     """
     attr_list:
     
     """
-    
     if summ_index == len(summ_list):
         o_dict = dict()
         summarizers = []
@@ -1115,6 +2226,7 @@ def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,
             #print(data[i])
             #print(data_index)
             data_point = data[i][data_index]  
+            #input([data,i,data_index])
             #if summarizer_type == "Food Preferences":
                 #input(data_point)
             #input(age)
@@ -1189,7 +2301,7 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
     # Error check
     if len(data_list) == 0:
         return [None,None,None,None,None]
-    
+        
     s_cut = []
     
     average_list = []
@@ -2872,6 +3984,11 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
     
     r = float(sum(t_coverage))/len(data_list[0])
     
+    coverage = wu_mendel(r)
+    
+    return covering, coverage
+
+def wu_mendel(r):
     r1 = 0.02
     r2 = 0.15
     
@@ -2884,7 +4001,7 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
     else: 
         coverage = 1
     
-    return covering, coverage
+    return coverage
     
 
 def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag=None,goals=None):
@@ -3776,7 +4893,7 @@ def get_patterns(sax_list,num_sax,letter_map_list,tw,alpha_sizes,prefix,path,cyg
     os.chdir(path)
     #input("back to path")
     
-    with open("patterns.txt","r") as patterns_file:
+    with open(path + "patterns.txt","r") as patterns_file:
         content = patterns_file.readlines()
         
     content = content[2:]
