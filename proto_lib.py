@@ -397,7 +397,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             
         return summary
     elif "Goal Assistance" in summarizer_type:
-        summary = "In order to better to follow the " + qualifier_info[0] + ", you should"
+        summary = "In order to better follow the " + qualifier_info[0] + ", you should"
         for i in range(len(summarizer_list)):
             attr = attr_list[i]
             if attr[-1] == "s":
