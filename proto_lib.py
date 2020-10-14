@@ -47,6 +47,8 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
     """
     if TW != None:
         singular_TW = TW[:-1]
+    else:
+        singular_TW = None
         
     particle = "your"
     sub_particle = "your"
@@ -93,18 +95,30 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                         summary += " and"  
                     index += 1
                 summary += "."
-                return summary                
+                return summary        
+            elif "Food Items" in summarizer_type:
+                qual = qualifier_info[0][0]
+                index = attr_list.index(qual)
+                summary = "On " + str(best_quantifier) + " days when you eat " + qual + ", you also eat " + attr_list[not index] + "."
+                return summary
             else:
+                #input(qualifier_info)
                 if TW == "hours":
                     singular_TW = "day"
                     summary = "During " + str(best_quantifier) + " " + TW + " in the past " + singular_TW + ", when"
+                elif goals != None:
+                    summary = "On " + str(best_quantifier) + " " + x_val + ", when"
                 else:
+                    #print(best_quantifier,x_val,singular_TW)
                     summary = "On " + str(best_quantifier) + " " + x_val + " in the past " + singular_TW + ", when"
                 for i in range(len(qualifier_info[0])):
                     attribute_ = qualifier_info[0][i]
                     if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
-                        attribute_ = attribute_.lower()                     
-                    summary += " " + particle + " " + attribute_ + " was " + qualifier_info[1][i]
+                        attribute_ = attribute_.lower()             
+                    if goals == None:
+                        summary += " " + particle + " " + attribute_ + " was " + qualifier_info[1][i]
+                    else:
+                        summary += " you " + qualifier_info[1][i] + " " + particle + " " + attribute_ + " goal"
                     if i != len(qualifier_info[0])-1:
                         summary += " and"                     
                 
@@ -118,7 +132,10 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                         attribute_ = attribute_.lower() 
                         
                     #input([index,summarizer_list])
-                    summary += " " + particle + " " + attribute_ + " was " + summarizer_list[index]
+                    if goals == None:
+                        summary += " " + particle + " " + attribute_ + " was " + summarizer_list[index] 
+                    else:
+                        summary += " you " + summarizer_list[index] + " " + particle + " " + attribute_ + " goal"
                     if index != len(summarizer_list)-1:
                         summary += " and"  
                     index += 1
@@ -138,7 +155,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             if TW == "hours":
                 summary = "During " + str(best_quantifier) + " " + TW
                 singular_TW = "day"
-            else:            
+            else:         
                 summary = "On " + str(best_quantifier) + " " + x_val
                                 
             if TW != None:
@@ -172,11 +189,11 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 summary += " " + particle + " " + summarizer_list[0] + " " + sub_particle + " goal to obtain 20-35% of your calories from fat"
             elif "highcarblowfat" in goals[0][0][0] and "Fat Intake" in attr_list and "Carbohydrate Intake" in attr_list and len(attr_list) == 2:
                 if "none" in best_quantifier:
-                    summary = particle.capitalize() + " have been avoiding a high-carb, low-fat diet"
+                    summary = particle.capitalize() + " have not been conforming to a high-carb, low-fat diet"
                 else:
                     summary += " " + particle + " maintained a high-carb, low-fat diet"
-                    if best_quantifier == "most of the" or best_quantifier == "all of the" or best_quantifier == "more than half of the":
-                        summary += ". You may want to consider switching to a Mediterranean diet"
+                    #if best_quantifier == "most of the" or best_quantifier == "all of the" or best_quantifier == "more than half of the":
+                        #summary += "."
             elif "Energy Deficit" in attr_list:
                 if "none" in best_quantifier:
                     summary = particle.capitalize() + " haven't always been achieving a 500-750 kcal/day energy deficit"
@@ -196,10 +213,11 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 meal = goals[0][0][1]
                 #summary += " " + particle + " carbohydrate intake was " + summarizer_list[0] + " for " + meal.lower()  
                 s = None
+                #print(summarizer_list)
                 if "low" in summarizer_list[0]:
-                    s = "decreasing"
-                elif "high" in summarizer_list[0]:
                     s = "increasing"
+                elif "high" in summarizer_list[0]:
+                    s = "decreasing"
                 
                 if s == None:
                     summary = ""
@@ -256,6 +274,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 else:
                     goal = " low"
                 suffix += goal
+                #input([attr_list,summarizer_list])
                 summary += " " + particle + " " + str(summarizer_list[i]) + " " + sub_particle + " goal to " + prefix + suffix
                 if i != len(attr_list)-1:
                     summary += " and"
@@ -318,7 +337,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
         if temp_flag:
             part_ = "there was"
             subpart_ = "the"
-        summary = "The last time " + part_ + " a " + singular_TW + " similar to week " + str(tw_index) + ","
+        summary = "The last time " + part_ + " a " + singular_TW + " similar to week " + str(tw_index+1) + ","
         for i in range(len(attr_list)):
             attribute_ = attr_list[i]
             if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
@@ -332,8 +351,13 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
         summary = ""
         if "Breakfast" not in attr_list:
             for i in range(len(attr_list)):
-                if i == 0:
-                    summary += particle.capitalize() + " "
+                if goals != None:
+                    first = "You "
+                    if i != 0:
+                        first =  " " + first.lower()
+                    summary += first
+                elif i == 0:
+                    summary += particle.capitalize() + " "           
                 else:
                     summary += " " + particle + " "
                     
@@ -349,7 +373,11 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                     attribute_ = attribute_.lower()    
                     
-                summary += attribute_ + " tends to be " + str(summarizer_list[i])
+                #input(summary)
+                if goals != None:
+                    summary += "tend to " + summarizer_list[i] + " " + particle.lower() + " " + attribute_ + " goal"
+                else:
+                    summary += attribute_ + " tends to be " + str(summarizer_list[i])
                     
                 if i != len(attr_list)-1:
                     summary += " and"    
@@ -359,11 +387,14 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             if summarizer_list[0] == "did not have":
                 #summarizer = "inconsistent"
                 word = "not "
-                
+            
             summary += particle.capitalize() + " carbohydrate intake tends to " + word + "be " + summarizer
                 
-        summary += " on " + x_val + "s."     
-        
+        #if goals != None:
+            #summary += " on " + best_quantifier + " " + x_val + "s."
+        #else:
+        summary += " on " + x_val + "s."
+            
         return summary
     elif "Goal Assistance" in summarizer_type:
         summary = "In order to better to follow the " + qualifier_info[0] + ", you should"
@@ -414,11 +445,12 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 summ_list = summarizer_list[0].split(',')
                 attribute_list = attribute.split(',')
                 #print(attribute_list).
-                attribute_ = attribute_list[i].strip()
-                if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
-                    attribute_ = attribute_.lower()    
+                    
                     
                 for i in range(len(summ_list)):
+                    attribute_ = attribute_list[i].strip()
+                    if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
+                        attribute_ = attribute_.lower()                    
                     summary += "a " + summ_list[i].strip() + " " + attribute_
                     if len(summ_list) == 1:
                         break
@@ -513,7 +545,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             
             
             attribute_list = list(set(attribute_list) - set(qualifier_list))
-            print(attribute_list,qualifier_list)
+            #print(attribute_list,qualifier_list)
             #input(summ_map)
             #print(summarizer_list)
             #input([attribute_list,qualifier_list])
@@ -792,25 +824,55 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             summarizers2 = []
             weekdays = None
           
+            #print(summarizer_list)
             for i in range(len(summarizer_list)):
                 summarizers = summarizer_list[i][0]
                 items = summarizers.split(';')
-                summarizers1.append([items[0].strip('_')])
-                summarizers2.append([items[1].strip('_')])
-                #input(items).
-                #for j in range(len(items)):
-                    #items[j] = items[j].split('_')
-                    
-                #input()            
+                items1 = items[0].split(',')
+                items2 = items[1].split(',')
+                
+                items1 = [x for x in items1 if len(x)>0]
+                items2 = [x for x in items2 if len(x)>0]
+                #print(items1,items2)
+                
+                sublist = []
+                for j in range(len(items1)):
+                    #print(items1[j])
+                    if '_' in items1[j]:
+                        s = items1[j].split('_')
+                        sublist.append(s[0])
+                        summarizers1.append(sublist)
+                        sublist = [s[1]]
+                    else:
+                        sublist.append(items1[j])
+                        
+                summarizers1.append(sublist)
+                
+                sublist = []      
+                for j in range(len(items2)):
+                    if '_' in items2[j]:
+                        s = items2[j].split('_')
+                        sublist.append(s[0])
+                        summarizers2.append(sublist)
+                        sublist = [s[1]]
+                    else:
+                        #print(items2[j],sublist,j)
+                        sublist.append(items2[j])    
+                        
+                #print(sublist,len(items2))
+                summarizers2.append(sublist)
+                 
+            #print(summarizers1)
+            #print(summarizers2)
             for i in range(len(summarizers1)):
-                if len(summarizers1[i]) == 0:
+                if len(summarizers1[i]) == 0 or summarizers1[i][0] == '' or i>=len(attribute_list):
                     continue
                 if second != "":
                     second += ", and"
                 attribute_ = attribute_list[i]
                 if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                     attribute_ = attribute_.lower()                    
-                second += " their " + attribute_ + " follows the pattern of being "
+                second += " their " + attribute_.strip() + " follows the pattern of being "
                 for j in range(len(summarizers1[i])):
                     if third != "":
                         third += ", then "
@@ -827,16 +889,19 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             fourth = ","
             fifth = ""
           
+            #input(summarizers2)
             for i in range(len(summarizers2)):
-                if len(summarizers2[i]) == 0:
-                    continue            
+                if len(summarizers2[i]) == 0 or summarizers2[i][0] == '' or i>=len(attribute_list):
+                    continue 
+                
+                #print(summarizers2[i],len(summarizers2[i]))
                     
                 if fourth != "," and i == len(summarizers2)-1:
                     fourth += " and"            
                 attribute_ = attribute_list[i]
                 if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                     attribute_ = attribute_.lower()                    
-                fourth += " their " + attribute_ + " tends to be "
+                fourth += " their " + attribute_.strip() + " tends to be "
                 for j in range(len(summarizers2[i])):
                     if fifth != "":
                         fifth += ", then "                
@@ -853,45 +918,115 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             else:
                 sixth = '.'
                     
-            summary += second + third + fourth + fifth + sixth        
+            summary += second + third + fourth + fifth + sixth 
+            #input(summary)
         elif proto_type == "WIT":
             summary = "For " + best_quantifier + " participants in " + group + ", it is true that when"
             attribute_list = attribute.split('|')[0].split(',')
             second = ""
             third = ""
             abort = False
-            weekday_index = 0
             num_summarizers = 0
             summarizers1 = []
             summarizers2 = []
             weekdays = []
             weekday_index = 0
+            
+            #input(attribute_list)
             #weekdays = None
           
             for i in range(len(summarizer_list)):
                 summarizers = summarizer_list[i][0]
                 items = summarizers.split(';')
-                s1 = items[0].strip('_').split(',')
-                s2 = items[1].strip('_').split(',')
-                weekdays.append(s1[1])
-                weekdays.append(s2[1])
+                #print(summarizers)
+                #print(items)
                 
-                summarizers1.append([s1[0]])
-                summarizers2.append([s2[0]])
+                
+                it = items[0].split('_')
+                for it_ in it:
+                    if len(it_) == 0 and len(summarizers1) < 2:
+                        summarizers1.append('')
+                        continue
+                    part = it_.split(',')
+                    index = int(len(part)/2)
+                    sublist = []
+                    
+                    for summ in part[:index]:
+                        sublist.append(summ)
+                    if len(sublist)>0:
+                        summarizers1.append(sublist)                    
+                    
+                    for wd in part[index:]:
+                        if wd != '':
+                            weekdays.append(wd)  
+                    
+                    #part = it_.split(',')
+                    #summarizers1.append([part[0]])
+                    #weekdays.append(part[1])
+                    
+                it = items[1].split('_')
+                for it_ in it:
+                    if len(it_) == 0 and len(summarizers2) < 2: 
+                        summarizers2.append('')
+                        continue
+                    part = it_.split(',')
+                    index = int(len(part)/2)
+                    sublist = []
+                    
+                    for summ in part[:index]:
+                        sublist.append(summ)
+                    if len(sublist)>0:
+                        summarizers2.append(sublist)
+                    
+                    for wd in part[index:]:
+                        if wd != '':
+                            weekdays.append(wd)                
+                #input(it)
+                #summarizers1.append([it[0]])
+                #weekdays.append(it[1])
+                
+                #it = items[1].split('_')
+                #for it_ in it:
+                    #if len(it_) == 0:
+                        #summarizers2.append('')
+                        #continue
+                    
+                    #part = it_.split(',')
+                    #summarizers2.append([part[0]])
+                    #weekdays.append(part[1])
+                #summarizers1.append([it[0]])
+                #weekdays.append(it[1])                
+                
+                #s1 = items[0].strip('_').split(',')
+                #s2 = items[1].strip('_').split(',')
+                #print(s1)
+                #print(s2)
+                #index1 = int(len(s1)/2.0)
+                #index2 = int(len(s1)/2.0)
+                #for s in s1[index1:]:
+                    #weekdays.append(s)
+                #for s in s2[index2:]:
+                    #weekdays.append(s)
+                
+                #summarizers1.append([s1[0]])
+                #summarizers2.append([s2[0]])
                 #input(items).
                 #for j in range(len(items)):
                     #items[j] = items[j].split('_')
                     
-            #input([summarizers1,summarizers2])            
+            #input([summarizers1,summarizers2])   
+            #print(summarizers1,summarizers2)
+            #print(weekdays)
             for i in range(len(summarizers1)):
-                if len(summarizers1[i]) == 0:
+                if len(summarizers1[i]) == 0 or summarizers1[i][0] == '' or i>=len(attribute_list):
                     continue
                 if second != "":
                     second += ", and"
                 attribute_ = attribute_list[i]
                 if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                     attribute_ = attribute_.lower()                    
-                second += " their " + attribute_ + " follows the pattern of being "
+                second += " their " + attribute_.strip() + " follows the pattern of being "
+                #print(summarizers1[i])
                 for j in range(len(summarizers1[i])):
                     if third != "":
                         third += ", then "
@@ -909,7 +1044,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             fifth = ""
           
             for i in range(len(summarizers2)):
-                if len(summarizers2[i]) == 0:
+                if len(summarizers2[i]) == 0 or summarizers2[i][0] == '' or i>=len(attribute_list):
                     continue            
                     
                 if fourth != "," and i == len(summarizers2)-1:
@@ -917,7 +1052,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 attribute_ = attribute_list[i]
                 if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                     attribute_ = attribute_.lower()                    
-                fourth += " their " + attribute_list[i] + " tends to be "
+                fourth += " their " + attribute_.strip() + " tends to be "
                 for j in range(len(summarizers2[i])):
                     if fifth != "":
                         fifth += ", then "                
@@ -1028,7 +1163,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             if ',' in summarizer_list[0][0]:
                 summ_list = summarizer_list[0][0].split(',')
                 
-                #print(attribute_list).
+                #print(attribute_list,summ_list)
                 for i in range(len(summ_list)):
                     attribute_ = attribute_list[i].strip()
                     if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
@@ -1062,7 +1197,12 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 
     return ""
 
-def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=None,activity_level=None,arm_filepath=None):
+def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=None,activity_level=None,arm_filepath=None,quick=False):
+    
+    if quick:
+        summaries, _ = get_single_SAX_summary(key_list,tw_sax,letter_map_list,alpha_sizes,singular_TW,tw_size=tw,past_tw=past_full_wks,age=age,activity_level=activity_level)
+        return summaries
+    
     if "close value" in key_list: 
         for i in range(len(key_list)):
             key_list[i] = pid_list[i] + " " + key_list[i]
@@ -1076,6 +1216,7 @@ def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,le
             tw_summary, tw_summarizers = HR_Summary(hr,age,activity_level,singular_TW)
         else:
             for i in range(len(key_list)):
+                
                 past_tw_letters.append(tw_sax_list[i][-1])
                 summarizer_type += key_list[i]
                 
@@ -1096,9 +1237,13 @@ def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,le
             length = get_summary_length(len(tw_summarizers))
             simplicity = get_simplicity(len(tw_summarizers)+1)
             
-            query_ = [["current index",[len(tw_sax)-1]]]   
-            t3, coverage = degree_of_covering(key_list,tw_sax_list,tw_summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
-            t4 = degree_of_appropriateness(key_list,tw_sax_list,tw_summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)
+            query_ = [["current index",[0]]] 
+            tmp = []
+            for item in tw_sax_list:
+                tmp.append(item[-1]) 
+                
+            t3, coverage = degree_of_covering(key_list,tmp,tw_summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+            t4 = degree_of_appropriateness(key_list,tmp,tw_summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)
             
             if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
                 with open(arm_filepath,"a",newline='') as csvfile:
@@ -1118,16 +1263,20 @@ def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,le
                     datawriter.writerow([pid,key_list_str,tw,'SETW','',summ_str])              
             
             return [tw_summary,t3,coverage,t4,length,simplicity,first]
-        
+    if quick:
+        return [None]*2    
     return [None]*7
 
-def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None):
+def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,food_items=False):
     summarizer_type = "Past Daily TW - "
-    for i in range(len(key_list)):
-        summarizer_type += key_list[i]
+    if not food_items:
+        for i in range(len(key_list)):
+            summarizer_type += key_list[i]
         
-        if i != len(key_list)-1:
-            summarizer_type += " and "
+            if i != len(key_list)-1:
+                summarizer_type += " and " 
+    else:
+        summarizer_type += "Food Items"
             
     summarizer_7 = ["extremely low","very low","low","moderate","high","very high","extremely high"]
     
@@ -1163,11 +1312,17 @@ def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,qu
     if daily_summary != None:
         length = get_summary_length(len(summarizer_list))
         simplicity = get_simplicity(len(summarizer_list)+1)
-        query_ = [["through",start_day,end_day]]
+        
+        tmp = []
+        n = 0
+        for item in sax_list:
+            n = len(item)
+            tmp.append(item)    
+        query_ = [["through",0,n]]
         
         t2 = degree_of_imprecision(avg_list)
-        t3, coverage = degree_of_covering(key_list,sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
-        t4 = degree_of_appropriateness(key_list,sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
+        t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+        t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
         
         if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
             with open(arm_filepath,"a",newline='') as csvfile:
@@ -1190,18 +1345,30 @@ def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,qu
         
         return [daily_summary, truth, t2, t3, coverage, t4, length, simplicity]
     
+    if quick:
+        return [None]*2    
     return [None]*8   
 
-def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,TW,age,activity_level,day_sax=None,arm_filepath=None):
-    summarizer_type = "Past Daily TW w/ Qualifier- "
-    for i in range(len(key_list)):
-        summarizer_type += key_list[i]
+def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,TW,age,activity_level,day_sax=None,arm_filepath=None,food_items=False,quick=False,goals=None,summarizer_type=None,constraint=False):
     
-        if i != len(key_list)-1:
-            summarizer_type += " and " 
-            
+    if summarizer_type is None:
+        summarizer_type = "Past Daily TW w/ Qualifier- " 
+        
+    if not food_items:
+        for i in range(len(key_list)):
+            summarizer_type += key_list[i]
+        
+            if i != len(key_list)-1:
+                summarizer_type += " and " 
+    else:
+        summarizer_type += "Food Items"
+    
     summarizers = ["very low","low","moderate","high","very high"]
-    
+    if food_items:
+        summarizers = ["eaten","not eaten"]
+    if goals != None:
+        summarizers = ["reached","did not reach"]
+            
     summarizer_list = []
     for i in range(len(key_list)):
         if alpha_sizes[i] == 7:
@@ -1235,20 +1402,43 @@ def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alp
                                                                                                     alpha,
                                                                                                     TW=TW,
                                                                                                     xval="days",
-                                                                                                    flag=flag_)
-            if quantifier_list != None:
+                                                                                                    flag=flag_,
+                                                                                                    goals=goals)
+            
+            if quick:
+                if summary_list == None:
+                    return None
+                return avg_list
+            
+            
+            
+            if quantifier_list != None and len(quantifier_list) > 0:
                 index = best_quantifier_index(quantifier_list,t1_list)
                 summary = summary_list[index]
                 summarizers_list = summarizers_list[index]
                 truth = t1_list[index]
                 average = avg_list[index]
                 
+                if constraint:
+                    return summarizers_list, average                
+            
                 length = get_summary_length(len(summarizers_list))
                 simplicity = get_simplicity(len(summarizers_list)+len(flag_)+1)
-                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",start_day,end_day]]
+                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",0,7]]
+                                
+                tmp = []
+                n = 0
+                for item in past_tw_list:
+                    n = len(item)
+                    tmp.append(item)    
+                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",0,7]]
+                    
+                #print(start_day,end_day)
+                #input(past_tw_list)
+                    
                 t2 = degree_of_imprecision(avg_list)
-                t3, coverage = degree_of_covering(key_list,past_tw_list,summarizers_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
-                t4 = degree_of_appropriateness(key_list,past_tw_list,summarizers_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
+                t3, coverage = degree_of_covering(key_list,tmp,summarizers_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
+                t4 = degree_of_appropriateness(key_list,tmp,summarizers_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
                 
                 summaries.append(summary)
                 truth_list.append(truth)
@@ -1259,7 +1449,6 @@ def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alp
                 length_list.append(length)
                 simplicity_list.append(simplicity)
                 
-    
     if len(summaries) == 0:
         return [None]*9
     
@@ -1337,13 +1526,20 @@ def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_l
                 else:
                     prev_ = first_index   
                 
-                query_ = [["current index",[past_,prev_]]]
+                query_ = [["current index",[0,1]]]
                 flag_ = "compare"
                 if attr == "Heart Rate":
                     flag_ = "compareHR"
+                
+                tmp = []
+                for i in range(len(key_list)):
+                    tmp_str = ""
+                    tmp_str += tw_sax_list[i][prev_]
+                    tmp_str += tw_sax_list[i][past_]
+                    tmp.append(tmp_str)
                     
-                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
-                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)  
+                t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
+                t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)  
                 
                 if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
@@ -1438,14 +1634,21 @@ def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alph
                 else:
                     prev_ = prev_index   
                 
-                query_ = [["current index",[past_,prev_]]]    
-                
+                query_ = [["current index",[0,1]]]    
+                                
                 flag_ = "compare"
                 if attr == "Heart Rate":
-                    flag_ = "compareHRGoal" 
+                    flag_ = "compareHRGoal"  
                     
-                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
-                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)   
+                tmp = []
+                for i in range(len(key_list)):
+                    tmp_str = ""
+                    tmp_str += tw_sax_list[i][prev_]
+                    tmp_str += tw_sax_list[i][past_]
+                    tmp.append(tmp_str) 
+                    
+                t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
+                t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)   
                 
                 if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
@@ -1475,7 +1678,7 @@ def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alph
             
     return [None]*6
 
-def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None):
+def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,goals=[None],quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,ada_goal=None):
     weather_flag = False
     for attr_ in attr_list:
         if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
@@ -1505,10 +1708,11 @@ def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alp
                 summarizer_type += " and "
             
         input_goals = [goals]
+        #print(input_goals)
         if attr == "MyFitnessPal":
             input_goals = goals
-            
-        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,past_tw_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,TW=TW,goals=input_goals,ada_goal=ada_goal)
+                                    
+        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,past_tw_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,TW=TW,goals=input_goals,ada_goal=ada_goal)        
         
         if quantifier_list != None:
             index = best_quantifier_index(quantifier_list,t1_list)
@@ -1516,18 +1720,25 @@ def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alp
             summarizers = summarizer_list[index]
             truth = t1_list[index]
             average = avg_list[index]
-        
-            query_ = [["through",start_day,end_day]]
+            
+            if quick:
+                return [[goal_summary],[truth]]
+            
+            query_ = [["through",0,7]]
+            tmp = []
+            for item in past_tw_list:
+                tmp.append(item[start_day:end_day])
+                
             if attr == "StepUp" or attr == "MyFitnessPal" or attr == "MyFitnessPalMeals":
                 
-                t3, coverage = degree_of_covering(key_list,data_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals,quantifier=quantifier_list[index])
+                t3, coverage = degree_of_covering(key_list,tmp,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals,quantifier=quantifier_list[index])
             else:
                 flag_ = None
                 if attr == "Heart Rate":
                     flag_ = "HR"                            
-                t3, coverage = degree_of_covering(key_list,data_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals[0],flag=flag_)
+                t3, coverage = degree_of_covering(key_list,tmp,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,goals=input_goals[0],flag=flag_)
             
-            t4 = degree_of_appropriateness(key_list,data_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,goals=input_goals)
+            t4 = degree_of_appropriateness(key_list,tmp,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,goals=input_goals)
             
             length = get_summary_length(len(summarizers))
             simplicity = get_simplicity(len(summarizers)+1)
@@ -1562,10 +1773,11 @@ def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alp
                     datawriter.writerow([pid,key_list_str,tw,'GE',quantifier_list[index],summ_str,goal_str])            
             
             return [goal_summary, truth, t2, t3, coverage, t4, length, simplicity]
-        
+    if quick:
+        return [None]*2    
     return [None]*8
 
-def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,activity_level,data_dict=None,arm_filepath=None):
+def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,activity_level,start_day=None,end_day=None,data_dict=None,arm_filepath=None,quick=False):
     import pandas as pd
     if attr != "MyFitnessPalMeals":
         trend_lists = []
@@ -1613,8 +1825,15 @@ def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,
             truth = t1_list[index]
             average = avg_list[index]
             
-            t3, coverage = degree_of_covering(key_list,trend_lists,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,flag=None)
-            t4 = degree_of_appropriateness(key_list,trend_lists,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)               
+            if quick:
+                return [[trend_summary],[truth]]
+            
+            tmp = []
+            for item in data_list:
+                tmp.append(item[start_day:end_day])
+                
+            t3, coverage = degree_of_covering(key_list,tmp,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,flag=None)
+            t4 = degree_of_appropriateness(key_list,tmp,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)               
             length = get_summary_length(len(summarizers))
             simplicity = get_simplicity(len(summarizers))
             t2 = degree_of_imprecision(avg_list)
@@ -1641,9 +1860,20 @@ def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,
             
             return [trend_summary, truth, t2, t3, coverage, t4, length, simplicity]
         
+    if quick:
+        return [None]*2
     return [None]*8
 
-def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=None):
+def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=None,quick=False,week_index=None,constraint=False):
+    #tmp = []
+    #for sublist in tw_sax_list:
+        #if len(sublist) == tw:
+            #tmp.append(sublist)
+            
+    #tw_sax_list = tmp
+    summary_data_list = tw_sax_list
+    #input(tw_sax_list)
+    
     if "Activity" not in key_list and TW != None and TW != "hours":
         combined_sax = []
         sep_sax_list = []
@@ -1661,7 +1891,12 @@ def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_
         indices = None
         try:
             tw_index = -1
-            [cluster_data, indices] = series_clustering(full_sax_rep,tw_sax_list,tw,flag=chunked_sax,week_index=tw_index)
+            if week_index != None:
+                tw_index = week_index            
+            
+            #print(chunked_sax)
+                
+            [cluster_data, indices, tw_index] = series_clustering(full_sax_rep,tw_sax_list,tw,flag=chunked_sax,week_index=tw_index)
         except TypeError:
             cluster_data = None
             indices = None
@@ -1681,9 +1916,12 @@ def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_
                 if i != len(key_list)-1:
                     summarizer_type += " and "  
             
-            avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,cluster_data,letter_map_list,alpha_sizes,alpha,tw_index=tw_index)
+            #print(summarizer_type)
+            avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(summarizers_list,summarizer_type,key_list,cluster_data,letter_map_list,alpha_sizes,alpha,tw_index=tw_index+1)
+            
+            #input(avg_list)
 
-            extension = "In " + TW[:-1] + " " + str(tw_index) + ","
+            extension = "In " + TW[:-1] + " " + str(tw_index+1) + ","
             last_summarizer = ""
             num_summarizers = 0
             temp_flag = False
@@ -1698,7 +1936,7 @@ def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_
                 summary_data = summary_data_list[i]
                 
                 attribute_ = key_list[i]
-                if not temp_flag:
+                if "close value" not in attribute_:
                     attribute_ = attribute_.lower()                                
                 extension += " your " + attribute_ + " was"
                 for letter in summary_data:
@@ -1723,14 +1961,41 @@ def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_
                 cluster_summary = summary_list[index]
                 summarizers = summarizer_list[index]
                 truth = t1_list[index]
+                average = avg_list[index]
+                
+                if constraint:
+                    return [summarizers,average]
+                
+                if quick:
+                    return [cluster_summary,[truth],cluster_data]
                 
                 cluster_summary = extension + " " + cluster_summary
                 
                 query_ = [["current index", indices]]
+                #print(indices)
                 
+                indices_ = []
+                # TODO: make this multi
+                #print(indices)
+                #print(tw_sax_list)
+                for j in range(len(tw_sax_list)):
+                    sublist = []
+                    for index in indices:
+                        tmp = []
+                        tmp.append(tw_sax_list[j][index])
+                        tmp.append(tw_sax_list[j][index+1])
+                        sublist.append(tmp)
+                    indices_.append(sublist)
+                    
+                #input(tw_sax_list)
+                #if len(tw_sax_list) == 1:
+                    #indices_ = indices_[0]
+                #input(indices_)
+                #indices_ = [indices_]
                 
-                t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag="compare")
-                t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")
+                t3, coverage = degree_of_covering(key_list,indices_,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,flag="compare")
+                #input()
+                t4 = degree_of_appropriateness(key_list,indices_,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")
                     
                 # To count the summarizer in pattern_summarizers
                 num_summarizers += len(key_list)
@@ -1758,13 +2023,25 @@ def generateCB(attr,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_
                                    
                                 
                         datawriter.writerow([pid,key_list_str,tw,'CB',None,summ_str,None])                   
-                
-                return [cluster_summary, truth, t2, t3, coverage, t4, length, simplicity, tw_index, cluster_data]
-            
-    return [None]*10
+                return [cluster_summary, truth, t2, t3, coverage, t4, length, simplicity, tw_index, cluster_data, indices_]
+    if quick:
+        return [None]*3    
+    if constraint:
+        return [None]*2
+    return [None]*11
 
-def generateSP(key_list,cluster_data,tw_index,arm_filepath=None):
+def generateSP(attr,key_list,cluster_data,tw_index,indices_,letter_map_list,alpha_sizes,age,activity_level,arm_filepath=None,quick=False):
     if cluster_data != None:
+        
+        summarizer_type = "Pattern Recognition - " 
+        for i in range(len(key_list)):
+            if key_list[i] == "step count":
+                key_list[i] = "Step Count"      
+                
+            summarizer_type += key_list[i]
+            if i != len(key_list)-1:
+                summarizer_type += " and "         
+        
         num_summarizers = 0
         first_letters = []
         second_letters = []
@@ -1774,10 +2051,17 @@ def generateSP(key_list,cluster_data,tw_index,arm_filepath=None):
             
         num_summarizers = len(first_letters)
         sp_summary, summarizer_list = standard_pattern_summary(first_letters,second_letters,key_list,tw_index) 
+
+        if quick: return sp_summary
         
-        query_ = [["current index", [indices[-1]]]]
-        t3, coverage = degree_of_covering(key_list,tw_sax_list,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag="compare")
-        t4 = degree_of_appropriateness(key_list,tw_sax_list,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")                    
+        last_indices = []
+        for i in range(len(indices_)):
+            last_indices.append([indices_[i][-1]])
+        #input(last_indices)
+        
+        #query_ = [["current index", [indices[-1]]]]
+        t3, coverage = degree_of_covering(key_list,last_indices,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,flag="compare")
+        t4 = degree_of_appropriateness(key_list,last_indices,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag="compare")                    
         length = get_summary_length(num_summarizers)
         simplicity = get_simplicity(num_summarizers+1)
         
@@ -1827,12 +2111,16 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
             proto_cnt = proto_cnt_
         
         if len(summary_list) != 0:
+            t1_list = []
+            t2_list = []
             t3_list = []
             t4_list = []
             coverage_list = []
             length_list = []
             simplicity_list = []
             
+            t1_list_ = []
+            t2_list_ = []
             t3_list_ = []
             t4_list_ = []
             coverage_list_ = []
@@ -1853,9 +2141,12 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
                 if attr == "Heart Rate":
                     sax_list = [data]    
                     
+                _, t1 = getQForS(supports[i],None,None)
+                t1_list.append(t1)
+                t2_list.append(degree_of_imprecision([supports[i]]))
                 t3_list.append(supports[i])
-                t4_list.append(degree_of_appropriateness(key_list,sax_list,summ_list,summarizer_type,supports[i],letter_map_list,alpha_sizes,age,activity_level))
-                coverage_list.append(wu_mendel(supports[i]))
+                #t4_list.append(degree_of_appropriateness(key_list,sax_list,summ_list,summarizer_type,supports[i],letter_map_list,alpha_sizes,age,activity_level))
+                coverage_list.append(degree_of_coverage(supports[i]))
                 length_list.append(numsum_list[i])
                 simplicity_list.append(numsum_list[i]+1)
                 
@@ -1870,15 +2161,18 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
                     summ_list_.append(sublist)
                     summ_index += 1                
                 
+                _, t1 = getQForS(supports_[i],None,None)
+                t1_list_.append(t1)                
+                t2_list_.append(degree_of_imprecision([supports_[i]]))
                 t3_list_.append(supports_[i])
-                t4_list_.append(degree_of_appropriateness(key_list,sax_list,summ_list_,summarizer_type,supports_[i],letter_map_list,alpha_sizes,age,activity_level))
-                coverage_list_.append(wu_mendel(supports_[i]))
+                #t4_list_.append(degree_of_appropriateness(key_list,sax_list,summ_list_,summarizer_type,supports_[i],letter_map_list,alpha_sizes,age,activity_level))
+                coverage_list_.append(degree_of_coverage(supports_[i]))
                 length_list_.append(numsum_list_[i])
                 simplicity_list_.append(numsum_list_[i]+1) 
             
-            return [summary_list, t3_list, t4_list, coverage_list, length_list, simplicity_list, weekday_summaries, t3_list_, t4_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt]
+            return [summary_list, t1_list, t2_list, t3_list, coverage_list, length_list, simplicity_list, weekday_summaries, t1_list_, t2_list_, t3_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt]
         
-    output = [None]*13
+    output = [None]*15
     output[-1] = proto_cnt
     return output
   
@@ -1988,9 +2282,10 @@ def generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alph
                         
         return [None]*8
 
-def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None):
+def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None,quick=False,goals=None,constraint=False):
     weekdays = list(set(date_column))
-    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = [], [], [], [], [], [], [], []
+    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, avg_list_, summarizer_lists = [], [], [], [], [], [], [], [], [], []
+    #input(weekdays)
     for weekday in weekdays:
         if TW == "hours":
             break
@@ -2008,8 +2303,12 @@ def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha
         weekday_index_list = []
         day_summ_list = []
         day_summarizers = ["very low","low","moderate","high","very high"]
-                              
+        if goals != None:
+            day_summarizers = ["reach","not reach"]        
+           
+        #input(key_list)                  
         for j in range(len(key_list)):
+            
             if alpha_sizes[j] == 7:
                 day_summarizers = summarizer_7              
             if key_list[j] == "Heart Rate" or attr == "MyFitnessPalMeals":
@@ -2033,14 +2332,20 @@ def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha
                 day_summ_list = [carb_summarizers]
             else:
                 day_summ_list.append(day_summarizers)
-        
-        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(day_summ_list,summarizer_type,key_list,weekday_data_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,xval=weekday)
+                        
+        #input(weekday_data_list)
+        avg_list, t1_list, quantifier_list, summary_list, summarizer_list = generate_summaries(day_summ_list,summarizer_type,key_list,weekday_data_list,letter_map_list,alpha_sizes,alpha,age=age,activity_level=activity_level,xval=weekday,goals=goals)
         if summary_list != None:
             index = best_quantifier_index(quantifier_list,t1_list)
             day_summary = summary_list[index]
             summarizers = summarizer_list[index]
             truth = t1_list[index]          
             average = avg_list[index]
+            
+            if constraint:
+                summarizer_lists.append(summarizer_list)
+                avg_list_.append(average)
+                continue
             
             indices = [index for index in weekday_indices]
 
@@ -2062,7 +2367,10 @@ def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha
             coverage_list.append(coverage)
             t4_list.append(t4)
             length_list.append(length)
-            simplicity_list.append(simplicity)        
+            simplicity_list.append(simplicity)       
+            
+    if constraint:
+        return summarizer_lists, avg_list_
             
     if len(summaries) != 0:
         
@@ -2173,12 +2481,13 @@ def generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alp
                 return [summary, length, simplicity]
             
     return [None]*3
-                
-def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,subindex_list,sublists,letter_map,alpha_size,age,activity_level,goals=None):
+    
+def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,subindex_list,sublists,letter_map,alpha_size,age,activity_level,goals=None,range_dict=None):
     """
     attr_list:
     
     """
+    
     if summ_index == len(summ_list):
         o_dict = dict()
         summarizers = []
@@ -2196,7 +2505,6 @@ def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,
         muS_list = []
         for i in range(len(summarizers)):
             daily_goal = None
-            
             if goals != None and None not in goals:
                 #print([i, data_index])
                 #print(goals)
@@ -2206,7 +2514,6 @@ def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,
                 #print(len(goals),i,len(goals[i]),data_index)
                 #print(len(goals),i,data_index,summarizers)
                 #print(len(goals),i,len(goals[i]),data_index)
-                
                 try:
                     daily_goal = goals[i][data_index]
                 except IndexError:
@@ -2225,32 +2532,43 @@ def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,
             #print(i)
             #print(data[i])
             #print(data_index)
-            data_point = data[i][data_index]  
-            #input([data,i,data_index])
+            data_point = data[i][data_index] 
+            
+            #input(data)
+            #print(data_point)
             #if summarizer_type == "Food Preferences":
                 #input(data_point)
             #input(age)
             if age != None and activity_level != None:
-                muS = get_muS(attr_list[i],summarizer_type,summarizers[i],data_point,letter_map[i],alpha_size[i],age,activity_level,goal_=daily_goal)
+                muS = get_muS(attr_list[i],summarizer_type,summarizers[i],data_point,letter_map[i],alpha_size[i],age,activity_level,goal_=daily_goal,range_dict=range_dict)
             else:
-                muS = get_muS(attr_list[i],summarizer_type,summarizers[i],data_point,letter_map[i],alpha_size[i],goal_=daily_goal)           
-                
+                muS = get_muS(attr_list[i],summarizer_type,summarizers[i],data_point,letter_map[i],alpha_size[i],goal_=daily_goal,range_dict=range_dict)
+
+            if range_dict != None and type(muS) is not bool:
+                range_dict = muS[1]
+                muS = muS[0]
+            elif type(muS) is tuple:
+                muS = muS[0]      
+            
             muS_list.append(muS)
         
         #if summarizer_type == "Food Preferences":
             #input(muS_list)
-        
+        #if sum(muS_list) and len(muS_list)>1:
+        #input(muS_list)
         cnt = 0
         for muS in muS_list:
             if not muS:
                 cnt += 1
-                
+        #print(muS_list)
+        #print(summ_string)
+        #input(cnt)
         if cnt == 0:
             o_dict[summ_string] = min(muS_list)
         else:
             o_dict[summ_string] = 0
    
-        return o_dict
+        return o_dict, range_dict
     
     else:
         output_dict = dict()
@@ -2258,17 +2576,23 @@ def dynamic_nest(attr_list,summarizer_type,summ_list,summ_index,data,data_index,
             sublist = [0]*len(summ_list[summ_index])
             tmp = sublists[:]
             tmp.append(sublist)
-            l = dynamic_nest(attr_list,summarizer_type,summ_list,summ_index+1,data,data_index,subindex_list+[i],tmp,letter_map,alpha_size,age,activity_level,goals=goals)
-            
+            #input(tmp)
+            l = dynamic_nest(attr_list,summarizer_type,summ_list,summ_index+1,data,data_index,subindex_list+[i],tmp,letter_map,alpha_size,age,activity_level,goals=goals,range_dict=range_dict)
+            if range_dict != None:
+                range_dict = l[1]
+                l = l[0] 
+            else:
+                l = l[0]
+            #print(l)
             for key in l.keys():
                 if key in output_dict.keys():
                     output_dict[key] += l[key]
                 else:
                     output_dict[key] = l[key]
  
-        return output_dict
+        return output_dict, range_dict
 
-def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,letter_map,alpha_size,alpha,TW="weeks",age=None,activity_level=None,xval=None,goals=None,flag=None,hr_letter_map=None,ada_goal=None,tw_index=None):
+def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,letter_map,alpha_size,alpha,TW="weeks",age=None,activity_level=None,xval="days",goals=None,flag=None,hr_letter_map=None,ada_goal=None,tw_index=None,range_dict=None):
     """
     Inputs:
     - summarizer_lists: a list of lists of relevant summarizers
@@ -2301,28 +2625,29 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
     # Error check
     if len(data_list) == 0:
         return [None,None,None,None,None]
-        
+    
     s_cut = []
     
     average_list = []
     muWg_list = []
     
-    #print(data_list)
     avg_dict = dict()
     #input(age)
-    #input(data_list)
+    #if "Qualifier" in summarizer_type:
+        #input(summarizer_lists)
     for i in range(len(data_list[0])):
-        d = dynamic_nest(attr_list,summarizer_type,summarizer_lists,0,data_list,i,[],[],letter_map,alpha_size,age,activity_level,goals=goals)  
-        #input(d)
+        d, range_dict = dynamic_nest(attr_list,summarizer_type,summarizer_lists,0,data_list,i,[],[],letter_map,alpha_size,age,activity_level,goals=goals,range_dict=range_dict)  
+        #if "Qualifier" in summarizer_type and len(data_list)>1:
+            #input(summarizer_type)
         for key in d.keys():
             if key in avg_dict.keys():
                 avg_dict[key] += d[key]
             else:
                 avg_dict[key] = d[key]   
-    
+                    
     best_quantifier_list = []
     summary_list = [] 
-        
+            
     # Shrink dataset with qualifier
     if flag != None and "Arm Comparison" not in attr_list:
         a = alpha_size[0]
@@ -2359,6 +2684,9 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
                 qual_dict[qual_key] += avg_dict[key]
             else:
                 qual_dict[qual_key] = avg_dict[key]
+    #if ada_goal == "highcarblowfat":
+        #input(avg_dict)
+    #print(data_list)
     #input(avg_dict)
     for key in sorted(avg_dict.keys()):
         quotient = len(data_list[0])
@@ -2370,16 +2698,23 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
                     qual_key += ", "
                 qual_key += flag[cnt] + ": " + summ_map[key[attr_indices[i]]]
                 cnt += 1   
-                
+            
             quotient = qual_dict[qual_key]
+            #print(qual_dict[qual_key])
         
         if quotient == 0:
             continue
+        if type(quotient) is str and quotient.count('0') == len(quotient):
+            continue
+
         avg_dict[key] = float(avg_dict[key])/float(quotient)
         best_quantifier, t1 = getQForS(avg_dict[key],alpha,TW)
+        #print(avg_dict[key],best_quantifier,t1)       
+        #if ada_goal == "highcarblowfat":
+            #input(best_quantifier)        
     
         # Error check for getQForS function
-        if best_quantifier == -1:
+        if best_quantifier == None:
             return [None,None,None,None,None]
 
         # Using the summarizers and their best quantifiers, summaries are generated
@@ -2396,6 +2731,8 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
                     index_list.append(i)
                 else:
                     subsummarizer_list.append(summarizer_lists[i][int(key[i])])
+            #input(summarizer_lists)       
+            #input([summarizers,subsummarizer_list,summarizer_type])
                     
             if len(info_list) == 0:
                 input([attr_list,i,flag])
@@ -2404,7 +2741,6 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
                 return [None,None,None,None,None]
             else:
                 summary = get_protoform(summarizer_type,attr_list,best_quantifier,subsummarizer_list,TW=TW,x_val=xval,qualifier_info=[flag,info_list,index_list],goals=goals,ada_goal=ada_goal,tw_index=tw_index)                
-                
         else:
             
             if "Arm Comparison" not in attr_list:
@@ -2432,9 +2768,11 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
                 summary = get_protoform(summarizer_type,attr_list,best_quantifier,subsummarizer_list,TW=TW,x_val=xval,qualifier_info=flag,goals=goals,ada_goal=ada_goal,tw_index=tw_index)
             else:
                 summary = get_protoform(summarizer_type,attr_list,best_quantifier,subsummarizer_list,TW=TW,x_val=xval,goals=goals,ada_goal=ada_goal,tw_index=tw_index)
-            
+        
+        #if ada_goal == "highcarblowfat":
         if len(summary) == 0:
             return [None,None,None,None,None]
+        #elif quick:
                         
         #input([avg_dict,summarizers,key])
         avg_list.append(avg_dict[key])
@@ -2444,12 +2782,16 @@ def generate_summaries(summarizer_lists,summarizer_type,attr_list,data_list,lett
         best_quantifiers.append(best_quantifier)     
         
     output_list = [avg_list,t1_list,best_quantifiers,summary_list,summarizer_list]
+    #input(output_list)
+    if range_dict != None:
+        #input(range_dict)
+        output_list.append(range_dict)
     #print(output_list)
     #input(avg_dict)
     #input([summary_list,avg_list])
     return output_list
             
-def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None,activity_level=None,goal_=None,flag=None):
+def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None,activity_level=None,goal_=None,flag=None,range_dict=None):
     """
     Inputs: 
     - summarizer_type: the domain of the summarizer we are looking at (e.g., step counts)
@@ -2466,6 +2808,7 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
     Purpose: To find and return the membership function value of the summarizer
     based on the inputted value and the summarizer type
     """     
+    #print(summarizer_type)
     #input(attr)
     #input(value)
     #print("here",goal_,summarizer_type)
@@ -2508,6 +2851,7 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
     elif "Trends" in summarizer_type:
         #if "doc" in summarizer_type:
             #input([summarizer,value])
+        #print(value,summarizer)
         if summarizer == "increases":
             return int(value > 0)
         elif summarizer == "decreases":
@@ -2548,8 +2892,38 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
                     return (value == "c")
                 else:
                     return (value == "i")
+        elif "Food Items" in summarizer_type:
+            if summarizer == "eaten":
+                return int(int(value) == 1)
+            else:
+                return int(int(value) == 0)
+            #return int(value)
+        elif letter_map == None:
+            carb = False
+            fat = False
+            #print([value,goal_])
+            if attr == "Carbohydrate Intake":
+                percentage = (float(value*4)/goal_) * 100
+                carb = True
+            if attr == "Fat Intake":
+                percentage = (float(value*9)/goal_) * 100
+                fat = True             
+                
+            #print(attr,percentage)
+                
+            if summarizer == "reached":
+                if carb:
+                    return (percentage >= 25 and percentage <= 35)
+                if fat:
+                    return (percentage >= 15 and percentage <= 25)
+            else:
+                if carb:
+                    return not (percentage >= 25 and percentage <= 35)
+                if fat:
+                    return not (percentage >= 15 and percentage <= 25)
         return int(evaluateSAX(value,letter_map,alpha_size) == summarizer)
     elif "Pattern Recognition" in summarizer_type:
+        #print(value)
         if summarizer == "rose":
             return int(value[0] < value[1])
         elif summarizer == "dropped":
@@ -2563,6 +2937,28 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
             return int(categ_eval(value) == summarizer)  
         elif "Breakfast" in summarizer_type:
             return int(carb_evaluation(value) == summarizer)
+        elif letter_map == None:
+            carb = False
+            fat = False
+            if attr == "Carbohydrate Intake":
+                percentage = (float(value*4)/goal_) * 100
+                carb = True
+            if attr == "Fat Intake":
+                percentage = (float(value*9)/goal_) * 100
+                fat = True   
+                
+            #print(percentage)
+                
+            if summarizer == "reach":
+                if carb:
+                    return (percentage >= 25 and percentage <= 35)
+                if fat:
+                    return (percentage >= 15 and percentage <= 25)
+            else:
+                if carb:
+                    return not (percentage >= 25 and percentage <= 35)
+                if fat:
+                    return not (percentage >= 15 and percentage <= 25)            
         return int(evaluateSAX(value,letter_map,alpha_size) == summarizer)
     elif "Weekly" in summarizer_type:
         #print(summarizer_type)
@@ -2585,10 +2981,12 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
                 percentage = (float(fat*9)/calories) * 100
                 #print(calories,fat*9,percentage)
                 
+                range_dict["DG25"]["Fat"].append(percentage)
+                
                 if summarizer == "reached":
-                    return (percentage >= 20 and percentage <= 35)
+                    return [(percentage >= 20 and percentage <= 35),range_dict]
                 else:
-                    return (percentage < 20 or percentage > 35)
+                    return [(percentage < 20 or percentage > 35),range_dict]
             elif goal_ != None and "highcarblowfat" in goal_:
                 calories = goal_[1]
                 carbs = goal_[2]
@@ -2597,35 +2995,50 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
                 fat_percentage = (float(fat*9)/calories) * 100
                 carb_percentage = (float(carbs*4)/calories) * 100
                 
+                try:
+                    range_dict["DG05"]["Fat"].append(fat_percentage)
+                    range_dict["DG05"]["Carbohydrates"].append(carb_percentage)
+                except:
+                    pass
+       
                 if summarizer == "reached":
-                    return ((fat_percentage >= 15 and fat_percentage <= 25) and (carb_percentage >= 25 and carb_percentage <= 35))
-                else:
-                    return not ((fat_percentage >= 15 and fat_percentage <= 25) and (carb_percentage >= 25 and carb_percentage <= 35))
-            elif goal_ != None and "lowcarb" in goal_: # 4 calories per gram
+                    return [((fat_percentage >= 15 and fat_percentage <= 25) and (carb_percentage >= 25 and carb_percentage <= 35)),range_dict]
+                else:                
+                    return [(not ((fat_percentage >= 15 and fat_percentage <= 25) and (carb_percentage >= 25 and carb_percentage <= 35))),range_dict]
+            elif goal_ != None and "lowcarb" in goal_: # 4 calories per gram                
                 calories = goal_[1]
                 carbs = goal_[2]
                 percentage = (float(carbs*4)/calories) * 100
                 
+                range_dict["DG17"]["Carbohydrates"].append(percentage)
+                
                 if summarizer == "reached":
-                    return (percentage <= 45)
+                    return [(percentage <= 45),range_dict]
                 else:
-                    return (percentage > 45)    
+                    return [(percentage > 45),range_dict]  
             elif attr == "Energy Deficit":
                 return (value >= 500 and value <= 750)
             elif attr == "MyFitnessPalMeals" and "consistentcarb" in goal_:
                 #input(goal_)
+                #print(value,summarizer)
+                
                 key = goal_[1]
+                #input([key,int(value),summarizer])
                 if summarizer == "reached":
                     if key == "Total":
                         return (value <= 150)
                     else:
-                        return (value >= 25 and value <= 50)        
+                        #return (value >= 25 and value <= 50) 
+                        return (int(value) == 30)
                 elif summarizer == "too low":
-                    return (value < 25)
+                    #return (value < 25)
+                    return (value < 30)
                 elif summarizer == "too high":
-                    return (value > 50)
+                    #return (value > 50)
+                    return (value > 30)
                 else:
-                    return (value >= 25 and value <= 50)   
+                    #return (value >= 25 and value <= 50)   
+                    return (int(value) == 30)
         
                 
             
@@ -2741,11 +3154,17 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
                               "very high" : "e"}
         cnt = 0
         for i in range(len(value)):
+            #print(value,summarizer,flag)
+            #try:
+                #print(reverse_letter_map[summarizer[i]],value[i])
+            #except KeyError:
+                #print(weekday_map[summarizer[i]],value[i])
             if summarizer[i] in reverse_letter_map.keys() and reverse_letter_map[summarizer[i]] == value[i]:
                 cnt += 1
             elif summarizer[i] in weekday_map.keys() and str(weekday_map[summarizer[i]]) == value[i]:
-                cnt += 1            
-    
+                cnt += 1 
+        
+        #print(cnt,len(value))
         return (cnt == len(value))
     elif "Food Preferences" in summarizer_type:
         return value
@@ -2756,14 +3175,14 @@ def get_muQ(quantifier,x):
     Inputs: 
     - (DEPRECATED) summarizer_type: the domain of the summarizer we are looking at (e.g., step counts)
     - quantifier: the quantifier dictating which membership function to use
-    - x: the value of the proportion after average of the muF
+    - x: the value of the proportion after average of the muS
     
     Outputs: Returns the truth value of the summary based on Zadeh's calculus; -1
     if summarizer_type not found
     
     Purpose: To calculate the truth value of the summary based on Zadeh's calculus
     """
-    if quantifier == "none of the" or quantifier == "not as good":
+    if quantifier == "none of the" or quantifier == "not as good" or quantifier == "not":
         if x >= 0 and x <= 0.01:
             return -100*x + 1
         else:
@@ -2827,7 +3246,7 @@ def get_muQ(quantifier,x):
         else:
             return 0
         
-    elif quantifier == "somewhat good":
+    elif quantifier == "slightly":
         if x > 0 and x <= 0.01:
             return 100*x
         elif x > 0.01 and x <= 0.3:
@@ -2837,7 +3256,7 @@ def get_muQ(quantifier,x):
         else:
             return 0
         
-    elif quantifier == "fairly good":
+    elif quantifier == "moderately":
         if x > 0.3 and x <= 0.4:
             return 10*x - 3
         elif x > 0.4 and x <= 0.6:
@@ -2847,7 +3266,7 @@ def get_muQ(quantifier,x):
         else:
             return 0        
             
-    elif quantifier == "pretty good":
+    elif quantifier == "considerably":
         if x > 0.6 and x <= 0.7:
             return 10*x - 6
         elif x > 0.7 and x <= 0.9:
@@ -2857,7 +3276,7 @@ def get_muQ(quantifier,x):
         else:
             return 0        
         
-    elif quantifier == "very good":
+    elif quantifier == "very":
         if x > 0.9 and x < 1:
             return 10*x - 9
         elif x == 1:
@@ -2886,7 +3305,7 @@ def getQForS(value,alpha,TW,q_list=None):
     """
     if q_list == None:
         q_list = ["all of the","most of the","more than half of the", "half of the","some of the","almost none of the","none of the"]
-    #q_cut = []
+
     max_truth = 0
     best_q = None
     for q in q_list:
@@ -2894,9 +3313,7 @@ def getQForS(value,alpha,TW,q_list=None):
         if truth > max_truth:
             max_truth = truth
             best_q = q
-        
-        #if truth > alpha:
-            #q_cut.append(q)
+            
     return best_q, max_truth
 
 ####### SAX SUMMARY FUNCTIONS #######
@@ -3023,7 +3440,11 @@ def comparison_TW_SAX_summary(summarizer_type,attr_list,prev_letters,curr_letter
     
     Purpose: used to output comparison summaries
     '''
+    #print(prev_letters,curr_letters)
     goal_list, summarizer_list = compare_SAX(attr_list,prev_letters,curr_letters,summarizer_type,letter_map,flag=flag,age=age,activity_level=activity_level) 
+    
+    #print(goal_list)
+    #print(summarizer_list)
 
     if "Step Count" in attr_list:
         index = attr_list.index("Step Count")
@@ -3362,7 +3783,8 @@ def carb_evaluation(value):
             if key == "Total":
                 result = result and (value[key] <= 150)    
             else:
-                result = result and (value[key] >= 25 and value[key] <= 50)     
+                #result = result and (value[key] >= 25 and value[key] <= 50)     
+                result = result and (value[key] == 30)     
                 
         result_map = {0 : "did not have",
                       1 : "had"}
@@ -3580,11 +4002,15 @@ def compare_SAX(attr_list,prev_letters,curr_letters,summarizer_type,letter_map,f
             
     #print(attr_list)
     
+    #print(prev_letters,curr_letters)
+    
     for i in range(len(prev_letters)):
         goal = None
         conclusion = None
         prev_letter = prev_letters[i]
         curr_letter = curr_letters[i]
+        
+        #print(prev_letter,curr_letter)
         
         if flag == "eval":
             if prev_letter < curr_letter:
@@ -3654,8 +4080,13 @@ def compare_SAX(attr_list,prev_letters,curr_letters,summarizer_type,letter_map,f
             
         elif "Activity" in summarizer_type and "Activity" not in covered:
             goal = "active"
-            covered.append("Activity")    
+            covered.append("Activity") 
             
+        if "Pattern Recognition" in summarizer_type and "Pattern Recognition" not in covered:
+            goal = "cluster"
+            covered.append("Pattern Recognition")
+                        
+        #print(summarizer_type)
         if goal == None:
             return [],[]
         
@@ -3677,7 +4108,15 @@ def compare_SAX(attr_list,prev_letters,curr_letters,summarizer_type,letter_map,f
             conclusion = compare_HR_TW(prev_letter,curr_letter,age,activity_level)
         elif goal == "active":
             conclusion, goal = compareACT(prev_letter,curr_letter) 
-            
+        elif goal == "cluster":
+            #print(prev_letter,curr_letter,summarizer_type)
+            if prev_letter < curr_letter:
+                conclusion = "better"
+            elif prev_letter == curr_letter:
+                conclusion = "about the same"
+            else:
+                conclusion = "not do as well"              
+        
         goal_list.append(goal)
         conclusion_list.append(conclusion)
             
@@ -3720,6 +4159,118 @@ def compareACT(prev_day,curr_day):
         summarizer = "about the same"
         
     return summarizer, goal
+
+def computeScore(vals):
+    
+    
+    def getRI(n):
+        if n == 3: 
+            return 0.58
+        if n == 4: 
+            return 0.9
+        if n == 5: 
+            return 1.12
+        if n == 6: 
+            return 1.24
+        if n == 7: 
+            return 1.32
+        if n == 8: 
+            return 1.41
+        if n == 9: 
+            return 1.45
+        if n == 10: 
+            return 1.49    
+        
+    n = 5
+    import string
+    alphabet = string.ascii_uppercase
+    
+    degree_map = {'truth' : 'A',
+                  'imprecision' : 'B',
+                  'covering' : 'C',
+                  'appropriateness' : 'D',
+                  'coverage' : 'E'}
+    
+    keys = ['A','B','C','D','E']
+    
+    master_dict = {'A' : {'A' : 1,
+                            'B' : 3,
+                            'C' : 9,
+                            'D' : 7,
+                            'E' : 5},
+                     'B' : {'A' : 0.33,
+                            'B' : 1,
+                            'C' : 7,
+                            'D' : 5,
+                            'E' : 3},
+                     'C' : {'A' : 0.11,
+                            'B' : 0.14,
+                            'C' : 1,
+                            'D' : 0.33,
+                            'E' : 0.2},
+                     'D' : {'A' : 0.14,
+                            'B' : 0.2,
+                            'C' : 3,
+                            'D' : 1,
+                            'E' : 0.33},
+                     'E' : {'A' : 0.2,
+                            'B' : 0.33,
+                            'C' : 5,
+                            'D' : 3,
+                            'E' : 1},
+                     }
+    
+    # Create matrix
+    matrix_list = []
+    #vals = []
+    for i in range(len(vals)):
+        #key = degree_map[val[0]]
+        key = keys[i]
+        value = vals[i]
+        #vals.append(values[i])
+        
+        sublist = []
+        for value in master_dict[key].values():
+            sublist.append(round(value,2))
+        matrix_list.append(sublist)
+    #master_matrix = sp.Matrix(matrix_list)
+    
+    #Find priority vector
+    col_sums = []
+    for i in range(len(matrix_list)):
+        col_sum = 0
+        for j in range(len(matrix_list[i])):
+            col_sum += matrix_list[j][i]
+        col_sums.append(col_sum)
+    
+    norm_matrix = []
+    for i in range(len(matrix_list)):
+        row = []
+        for j in range(len(matrix_list[i])):
+            row.append(matrix_list[i][j]/col_sums[j])
+        norm_matrix.append(row)
+    
+    priority_vector = []
+    for i in range(len(norm_matrix)):
+        row_avg = sum(norm_matrix[i]) / len(norm_matrix[i])
+        priority_vector.append(row_avg)
+    
+    # Find largest eigenvalue
+    lambda_max = 0
+    for i in range(len(priority_vector)):
+        lambda_max += col_sums[i]*priority_vector[i]
+        
+    # Compute consistency index and ratio
+    c_i = float(lambda_max - n)/(n - 1)
+    c_r = c_i/getRI(n)
+    #input(c_r)
+    
+    score = 0
+    for i in range(len(vals)):
+        for j in range(len(priority_vector)):
+            score += vals[i]*priority_vector[j]
+   
+    return score
         
 def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=None,flag=None,goals=None,TW="weeks",quantifier=None):
     """
@@ -3738,69 +4289,55 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
     Purpose: to calculate the degree of covering. This says how many objects in the database corresponding to the user's query are covered by the summary 
     
     """ 
-    
     t_covering = []
     t_coverage = []
     h = []
     
-    for i in range(len(data_list[0])):
-        #if goals != None:
-            #print(i,goals,goals[0][i])
-        #else:
-            #print(goals)
-        muS_list = []
-        # TODO: make it work for non-consecutive time windows
-        #if flag == "compare":
-            #for j in range(i+1,len(data_list[0])):
-                #for k in range(len(summarizers)):
-                    #first_letter = data_list[k][i]
-                    #second_letter = data_list[k][j]
-                    
-                    #compare_flag = "eval"
-                    #if "Goal" in summarizer_type or "Pattern Recognition" in summarizer_type:
-                        #compare_flag = None
-                    
-                    #goal_list, conclusion_list = compare_SAX(attr_list[k],first_letter,second_letter,summarizer_type,letter_map_list[k],flag=compare_flag)
-                    #conclusion = conclusion_list[0]
-                    
-                    #if "Pattern Recognition" in summarizer_type:          
-                        #summarizer_map = { "better" : "rose",
-                                           #"about the same" : "stayed the same",
-                                           #"not do as well" : "dropped"}
-                        #conclusion = summarizer_map[conclusion_list[0]]
+    try:
+        n = len(data_list[0])
+    except TypeError:
+        data_list = [data_list]
+        n = len(data_list)
+    #if "Pattern Recognition" in summarizer_type:
+        #n = len(data_list)
+        
+    #print(n)
+    #print(data_list)
     
-                    #if conclusion == summarizers[k]:
-                        #muS = 1
-                    #else:
-                        #muS = 0                    
-                    
-                    #muS_list.append(muS)
-            #input(muS_list)
-        #else:
+    for i in range(n):
+
+        muS_list = []
+        
         for j in range(len(summarizers)):
             muS = None
+            #if flag == "comparePR":
+            #print(flag)
+            
             if flag == "compare":
                 #print(flag)
                 skip_index = 0
-                if "Pattern Recognition" in summarizer_type:
-                    skip_index = len(data_list[0])-1
+                #if "Pattern Recognition" in summarizer_type:
+                    #skip_index = len(data_list[0])-1
 
-                if i == skip_index:
-                    continue
-                
-                first_letter = data_list[j][i-1]
-                second_letter = data_list[j][i]
+                #if i == skip_index or ("Pattern Recognition" in summarizer_type and (i+1)%2==0):
+                if i == skip_index and "Pattern Recognition" not in summarizer_type:
+                    continue                
                 
                 if "Pattern Recognition" in summarizer_type:
-                    first_letter = data_list[j][i+1]
+                    first_letter = data_list[j][i][0]
+                    second_letter = data_list[j][i][1]  
+                else:
+                    first_letter = data_list[j][i-1]
                     second_letter = data_list[j][i]                    
+                #print(first_letter,second_letter)
                 
                 compare_flag = "eval"
                 if "Goal" in summarizer_type or "Pattern Recognition" in summarizer_type:
                     compare_flag = None
                 
                 goal_list, conclusion_list = compare_SAX(attr_list[j],first_letter,second_letter,summarizer_type,letter_map_list[j],flag=compare_flag)
-                #print(conclusion_list)
+                #print(conclusion_list, first_letter, second_letter, i)
+                #print(data_list)
                 conclusion = conclusion_list[0]
                 
                 if "Pattern Recognition" in summarizer_type:          
@@ -3808,28 +4345,45 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                                        "about the same" : "stayed the same",
                                        "not do as well" : "dropped"}
                     conclusion = summarizer_map[conclusion_list[0]]
-
+                
+                #print([conclusion,summarizers[j]])
                 if conclusion == summarizers[j]:
                     muS = 1
                 else:
                     muS = 0 
+                    
             elif flag == "compareHR":
                 
+                #if i == 0:
+                    #continue
                 #print(i)
                 #if i%7 != 0 or i < 7:
                     #muS = None
                     #continue
-                
+                #print(data_list[j])
                 #curr_tw = data_list[j][i:i+7]
                 #last_tw = data_list[j][i-7:i]
-                curr_tw = [data_list[j][i]]
-                last_tw = [data_list[j][i-1]]
+                #curr_tw = [data_list[j][i]]
+                #last_tw = [data_list[j][i-1]]
+                
+                if "Pattern Recognition" in summarizer_type:
+                    last_tw = [data_list[j][i][0]]
+                    curr_tw = [data_list[j][i][1]]
+                else:
+                    curr_tw = [data_list[j][i]]
+                    last_tw = [data_list[j][i-1]]               
                 #print([i,curr_tw,last_tw])
                 
                 #conclusion = compare_HR_TW(last_tw,curr_tw,age,activity_level)
                 summary, conclusion, goal_list = comparison_TW_SAX_summary(summarizer_type,attr_list,last_tw,curr_tw,TW,letter_map_list,i-1,i,flag="eval")
+                #print(summary,conclusion,goal_list)
+                conclusion_map = { 'lower' : 'dropped',
+                                   'higher' : 'rose',
+                                   'about the same' : 'stayed the same'}
+                
                 #input([conclusion,summarizers[j]])
-                if conclusion[j] == summarizers[j]:
+                #print(conclusion[j],summarizers[j])
+                if conclusion_map[conclusion[j]] == summarizers[j]:
                     muS = 1
                 else:
                     muS = 0
@@ -3879,18 +4433,19 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                 #print(summarizer_type)
                 #print(i,goals)
                 goal = None
-                if goals != None:
+                if goals != None and None not in goals:
                     #print(goals,j,i)
                     try:
                         goal = goals[j][i]
                     except:
                         goal = goals[j]
                 #print(i,goal)
+                #print(data_list)
                 muS = get_muS(attr_list[j],summarizer_type,summarizers[j],data_list[j][i],letter_map_list[j],alpha_sizes[j],goal_=goal) 
-                #print(muS,summarizers[j])
+                #print(muS, summarizers[j])
             #print(muS_list)
             muS_list.append(muS)
-        
+        #print(query_list)
         if query_list == None:
             muWg = 1
         elif isinstance(query_list,list):
@@ -3923,6 +4478,7 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                     #if flag == "compare":
                         #input([query[0],query[1]])
                     index = i
+                    
                     if index in query[1]:
                         muWg = 1
                     else:
@@ -3947,19 +4503,19 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                     else:
                         muWg = 0
                 #print(query[0])
+                
                 final_muWg = int(int(final_muWg) and muWg)
             muWg = final_muWg
         else:
-            
             muWg = get_muWg(data_list[j][i],summarizer_type,summarizers[j],query)
     
-        
+        #print(final_muWg,muWg,muS_list)
         if (muS != None):
             cnt = 0
             for muS in muS_list:
                 if not muS:
                     cnt += 1
-                                 
+            #print(cnt)          
             if cnt == 0:
                 muS_covering = min(muS_list)
                 muS_coverage = 1
@@ -3976,19 +4532,17 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
     #if sum(t_covering)==0 and quantifier != "none of the":
         #print("ERROR: t_covering is 0")
         #input()
-    #input()
+    #input()\
+    #print(len(t_covering),len(h))
+    #print(sum(t_covering),sum(h))
+    #print(h)
     if sum(h) == 0:
         covering = 0
     else:
         covering = float(sum(t_covering))/sum(h)
-    
+            
     r = float(sum(t_coverage))/len(data_list[0])
     
-    coverage = wu_mendel(r)
-    
-    return covering, coverage
-
-def wu_mendel(r):
     r1 = 0.02
     r2 = 0.15
     
@@ -4001,8 +4555,23 @@ def wu_mendel(r):
     else: 
         coverage = 1
     
-    return coverage
+    return covering, coverage
+
+def degree_of_coverage(r):
     
+    r1 = 0.02
+    r2 = 0.15
+    
+    if r <= r1:
+        coverage = 0
+    elif r1 < r and r < (r1 + r2)/2:
+        coverage = 2*(((r - r1)/(r2 - r1))**2)
+    elif r >= (r1 + r2)/2 and r < r2:
+        coverage = 1 - 2*(((r2 - r)/(r2 - r1))**2)
+    else: 
+        coverage = 1
+        
+    return coverage
 
 def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level,flag=None,goals=None):
     """
@@ -4023,22 +4592,40 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
     # TODO: Factor this in once we have multiple attributes
        
     #t4_list = []
-    # Day count
-    
+    # Day count    
     r_list = []
+    #print(data_list)
+    #input([summarizers,attr_list])
+    #print("degree")
+    #print(summarizers)
+    try:
+        n = len(data_list[0])
+    except TypeError:
+        data_list = [data_list]
+        n = len(data_list)
+    #if "Pattern Recognition" in summarizer_type:
+        #n = len(data_list)    
+    #print(flag)
     for j in range(len(summarizers)):
         t_k = []
         summarizer = summarizers[j]
-        for i in range(len(data_list[0])):
-            
+        for i in range(n):
+            #print(j,i)
             
             if flag == "compare":
-                if i == 0:
+                if (i == 0 and "Pattern Recognition" not in summarizer_type): #or ("Pattern Recognition" in summarizer_type and ((i+1)%2==0 or i == len(data_list[j])-1)):
                     continue
                 
+                #print(i)
                 prev_letter = data_list[j][i-1]
                 curr_letter = data_list[j][i]
-    
+                
+                if "Pattern Recognition" in summarizer_type:
+                    #print(data_list,j,i)
+                    prev_letter = data_list[j][i][0]
+                    curr_letter = data_list[j][i][1]  
+                
+                #print(prev_letter,curr_letter)
                 goal_list, conclusion_list = compare_SAX(attr_list[j],prev_letter,curr_letter,summarizer_type,letter_map_list[j])   
                 conclusion = conclusion_list[0]
                 if "Pattern Recognition" in summarizer_type:
@@ -4047,20 +4634,33 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
                                        "not do as well" : "dropped"}
                     conclusion = summarizer_map[conclusion_list[0]]                
                         
+                #print(prev_letter,curr_letter,conclusion,summarizer)
                 if conclusion == summarizer:
                     t_k.append(1)
                 else:
                     t_k.append(0)
             elif flag == "compareHR":
-                if i%7 != 0 or i < 7:
-                    continue
+                #if i%7 != 0 or i < 7:
+                    #continue
                 
-                curr_tw = data_list[j][i:i+7]
-                last_tw = data_list[j][i-7:i]
+                #curr_tw = data_list[j][i:i+7]
+                #last_tw = data_list[j][i-7:i]
+                if "Pattern Recognition" in summarizer_type:
+                    last_tw = [data_list[j][i][0]]
+                    curr_tw = [data_list[j][i][1]]
+                else:
+                    curr_tw = [data_list[j][i]]
+                    last_tw = [data_list[j][i-1]]               
+                #print(curr_tw,last_tw,flag)
+                summary, conclusion, goal_list = comparison_TW_SAX_summary(summarizer_type,attr_list,last_tw,curr_tw,"weeks",letter_map_list,i-1,i,flag="eval")
+                #conclusion = compare_HR_TW(last_tw,curr_tw,age,activity_level)
+                conclusion_map = { 'lower' : 'dropped',
+                                   'higher' : 'rose',
+                                   'about the same' : 'stayed the same'}
                 
-                conclusion = compare_HR_TW(last_tw,curr_tw,age,activity_level)
-                    
-                if summarizer == conclusion:
+                #print(conclusion,summarizers)
+                #print(conclusion[j],summarizers[j])
+                if conclusion_map[conclusion[j]] == summarizer:
                     t_k.append(1)
                 else:
                     t_k.append(0)  
@@ -4073,7 +4673,8 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
                     t_k.append(1)
                 else:
                     t_k.append(0)        
-            elif flag == "HR" or attr_list[j] == "Heart Rate":
+            elif flag == "HR" or (attr_list[j] == "Heart Rate" and "Trends" not in summarizer_type):
+                #print(hr_evaluation(data_list[j][i],age,activity_level),summarizer)
                 if hr_evaluation(data_list[j][i],age,activity_level) == summarizer:
                     t_k.append(1)
                 else:
@@ -4085,12 +4686,15 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
                     skip_index = 1
             
                     valid = True
+                    extra = len(summarizer)
                     for k in range(start_index,len(summarizer)):
                         if i+k >= len(data_list[j]):
                             valid = False
                             break
                         
+                        #print(flag,summarizer,k,weekday_map)
                         if flag != None and summarizer[k] in weekday_map.keys():
+                            #input(weekday_map.keys())
                             curr_data += str(weekday_map[flag[i+k]])
                         else:
                             curr_data += data_list[j][i+k]
@@ -4109,23 +4713,31 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
                             try:
                                 goal = goals[j][i]
                             except IndexError:
-                                goal = goals[j]                        
+                                goal = goals[j]           
+                
+                #print(curr_data)
+                #print(summarizer_type,summarizer,flag,goal,curr_data)
+                #input(get_muS(attr_list[j],summarizer_type,summarizer,curr_data,letter_map_list[j],alpha_sizes[j],flag=flag,goal_=goal))
                 if get_muS(attr_list[j],summarizer_type,summarizer,curr_data,letter_map_list[j],alpha_sizes[j],flag=flag,goal_=goal):
                     t_k.append(1)
                 else:
                     t_k.append(0)
-
+        #print(sum(t_k),len(t_k))
         if sum(t_k)==0:
             r_k = 1
         else:
             r_k = sum(t_k)/float(len(t_k))
+        #print(len(t_k),len(data_list[0]), t_k)
         r_list.append(r_k)
-    
+        
+    #print(r_list,t3)
+
     r = 1
     for i in range(len(r_list)):
         r *= r_list[i]
-    
+        
     #print(r,t3)
+            
     return abs(r - t3)
 
 def degree_of_imprecision(avg_list):
@@ -4193,7 +4805,7 @@ def degree_of_informativeness(alpha,n,truth,quantifier,summs,r_list,summarizers)
     measure = truth*sp_q*sp_s
     measure_c = neg_truth*sp_qc*sp_sc
     
-    input([measure,measure_c])
+    #input([measure,measure_c])
     #s_c = []
     #for i in range(len(summs)):
         #s = summs[i]
@@ -4225,7 +4837,7 @@ def get_simplicity(value):
 
 ####### DATA FUNCTIONS #######
 
-def get_data_list(index_list,dataset,demo=False):
+def get_data_list(index_list,dataset,demo=False,constraints=False):
     '''
     Inputs:
     - index_list: list of indices of files to be used in the corresponding 
@@ -4274,22 +4886,37 @@ def get_data_list(index_list,dataset,demo=False):
         index = "DATE"    
     elif dataset == "MyFitnessPal":
         if demo:
-            data_folder = "data/MyFitnessPal/DemoData/DemoFoodLogs"
+            #data_folder = "data/MyFitnessPal/DemoData/DemoFoodLogs"
+            data_folder = "data/MyFitnessPal/DemoData/DemoMeals"
+            columns_ = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar"]
+        elif constraints:
+            #data_folder = "data/MyFitnessPal/FoodLogs"
+            #columns_ = ["date","Calories","Carbs","Fat","Protein","Sodium","Sugar","Food"] 
+            #column_list = ["date","Calories","Carbs","Fat","Protein","Sodium","Sugar","Food"]     
+            data_folder = "data/MyFitnessPal/DemoData/DemoMeals"
+            columns_ = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]            
         else:
-            #data_folder = "data/MyFitnessPal/all_users"
-            data_folder = "data/MyFitnessPal/FoodLogs"
+            data_folder = "data/MyFitnessPal/all_users"
+            #data_folder = "data/MyFitnessPal/FoodLogs"
             
-        columns_ = ["date","Calories","Carbohydrates","Fat","Protein","Sodium","Sugar","Food"]    
-        column_list = ["date","Calories","Carbohydrates","Fat","Protein","Sodium","Sugar"]
+            columns_ = ["date","Calories","Carbohydrates","Fat","Protein","Sodium","Sugar","Food"]    
+            column_list = ["date","Calories","Carbohydrates","Fat","Protein","Sodium","Sugar"]
         #raw_input(index_list)
     elif dataset == "MyFitnessPalMeals":
         if demo:
             data_folder = "data/MyFitnessPal/DemoData/DemoMeals"
+            columns_ = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar"]
+            #else:
+                #columns_ = ["date","Meal","Calories","Fat","Saturated Fat","Polyunsaturated Fat","Monounsaturated Fat","Trans Fat","Cholesterol","Sodium","Potassium","Carbohydrates","Fiber","Sugar","Protein","Vitamin A","Vitamin C","Calcium","Iron","Note"]  
+                #column_list = ["date","Meal","Calories","Carbohydrates","Fat","Polyunsaturated Fat","Monounsaturated Fat","Protein","Sodium","Sugar"]                    
         else:
             data_folder = "data/MyFitnessPal/Meals"
             
-        columns_ = ["date","Meal","Calories","Fat","Saturated Fat","Polyunsaturated Fat","Monounsaturated Fat","Trans Fat","Cholesterol","Sodium","Potassium","Carbohydrates","Fiber","Sugar","Protein","Vitamin A","Vitamin C","Calcium","Iron","Note"]  
-        column_list = ["date","Meal","Calories","Carbohydrates","Fat","Polyunsaturated Fat","Monounsaturated Fat","Protein","Sodium","Sugar"]    
+            columns_ = ["date","Meal","Calories","Fat","Saturated Fat","Polyunsaturated Fat","Monounsaturated Fat","Trans Fat","Cholesterol","Sodium","Potassium","Carbohydrates","Fiber","Sugar","Protein","Vitamin A","Vitamin C","Calcium","Iron","Note"]  
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Polyunsaturated Fat","Monounsaturated Fat","Protein","Sodium","Sugar"]    
     elif dataset == "StepUp" or dataset == "StepUpPhases":
         data_folder = "data/StepUp"
         columns_ = ["date","Start Date","End Date","Step Count","Treatment","Baseline","Notification","Intervention","Followup","Phase"]    
@@ -4313,20 +4940,25 @@ def get_data_list(index_list,dataset,demo=False):
         index = "Participant"
     elif dataset == "Energy Deficit":
         if demo:
-            data_folder = "data/MyFitnessPal/DemoData/DemoEnergyDeficit"
+            data_folder = "data/MyFitnessPal/DemoData/DemoMeals"
+            columns_ = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar"]
         else:
             data_folder = "data/MyFitnessPal/EnergyDeficit"      
         
-        columns_ = ["date","Calories Consumed","Calories Burned","Energy Deficit"]
-        column_list = ["date","Energy Deficit"]
+            columns_ = ["date","Calories Consumed","Calories Burned","Energy Deficit"]
+            column_list = ["date","Energy Deficit"]
     elif dataset == "SatFatDecrease":
         if demo:
             data_folder = "data/MyFitnessPal/DemoData/DemoMeals"
+            columns_ = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar","Food","url","id","Ingredients"]
+            column_list = ["date","Meal","Calories","Carbohydrates","Fat","Saturated Fat","Protein","Sodium","Sugar"]
+            #index = "Date"            
         else:
             data_folder = "data/MyFitnessPal/Meals"
             
-        columns_ = ["date","Meal","Calories","Fat","Saturated Fat","Polyunsaturated Fat","Monounsaturated Fat","Trans Fat","Cholesterol","Sodium","Potassium","Carbohydrates","Fiber","Sugar","Protein","Vitamin A","Vitamin C","Calcium","Iron","Note"]
-        column_list = ["date","Saturated Fat"]    
+            columns_ = ["date","Meal","Calories","Fat","Saturated Fat","Polyunsaturated Fat","Monounsaturated Fat","Trans Fat","Cholesterol","Sodium","Potassium","Carbohydrates","Fiber","Sugar","Protein","Vitamin A","Vitamin C","Calcium","Iron","Note"]
+            column_list = ["date","Saturated Fat"]    
     elif dataset == "FoodPreferences":
         if demo:
             data_folder = "data/MyFitnessPal/DemoData/DemoFoodLogs"
@@ -4355,7 +4987,11 @@ def get_data_list(index_list,dataset,demo=False):
         #input(csv_list[data_index])
         #input([len(csv_list),len(index_list)])
         #input(csv_list)
+        #print(data_index,csv_list)
+        #input(len(csv_list))
         file_name = csv_list[data_index]
+        #print(file_name)
+        #input(csv_list)        
         df = pd.read_csv(data_folder + "/" + csv_list[data_index],usecols=column_list)
         #input(df)
         if dataset == "Stock Market Data":
@@ -4387,6 +5023,7 @@ def get_data_list(index_list,dataset,demo=False):
         #df.columns = column_list
         #input(df)
         values = []
+        #input([column_list,dataset])
         for column in column_list:
             if dataset != "ActivFit" or (dataset == "ActivFit" and column != "ActivFit"):
                 values = df[column].tolist()
@@ -4433,7 +5070,8 @@ def get_data_list(index_list,dataset,demo=False):
             #input(values)
             #if column == 'date':
                 #print(values)
-        #input(values)/
+        #input(values)/\
+        #input(df_list)
         if dataset == "Cue" or dataset == "StepUp" or dataset == "StepUpTrimmed":
             df_list["Filename"] = csv_list[data_index]
             filename = csv_list[data_index].split("_")
@@ -4452,42 +5090,118 @@ def get_data_list(index_list,dataset,demo=False):
                     df_list["group"] = "cluster " + group[0]
             else:
                 df_list["group"] = None
-        if dataset == "MyFitnessPal":  
+        if dataset == "MyFitnessPal" and not demo and not constraints:  
             key_list = sorted(list(df_list.keys()))
+            #input(df_list)
+            #input(df_list['Carbohydrates'])
+            
             for key in key_list:
                 
-                if key == "date":
-                    df_list[key] = [item for item in df_list[key] if isinstance(item,str)]
-                    #print(key)
-                    #input(df_list)
+                #if key == "date":
+                    #df_list[key] = [item for item in df_list[key] if isinstance(item,str)]
+                    ##print(key)
+                    ##input(df_list)
+                    #continue
+                #print(key,df_list[key])
+                #input([key,df_list[key],df_list['Carbohydrates']])
+                
+                if len(df_list[key])==0 or (key != "Date" and isinstance(df_list[key][0],str)):
                     continue
-               
+                
+                
+                #input(df_list['Carbohydrates'])
                 vals = []
                 goals = []                
+                
+                val = 0
+                first = True
+                #print(key_list,len(dataframe))
+                #input(dataframe)
+                
+                from datetime import timedelta
+                #input(df_list)
+                #for key_ in df_list.keys():
+                    #df_list[key_] = [x for x in df_list[key_] if type(x)==str]
+                #input(df_list[key])
                 dataframe = df_list[key]
+                curr_date = datetime.datetime.strptime(df_list["date"][0],"%Y-%m-%d")
+                #input(len(dataframe))
+                #cnt = 0
                 for j in range(len(dataframe)):
+                    cnt = len(vals)
                     item = str(dataframe[j])
                     
                     try:
+                        item = float(item)
+                        date = df_list["date"][j]
+                        #input([date,datetime.datetime.strftime(curr_date,"%m/%d/%Y").lstrip("0")])
+                        if (date != '{d.month}/{d.day}/{d.year}'.format(d=curr_date) and not first) or (date == '{d.month}/{d.day}/{d.year}'.format(d=curr_date) and j == len(dataframe)-1):
+                            #if j == len(dataframe)-1:
+                                #val += item
+                            val = round(val,1)
+                            vals.append(val)
+                            val = 0
+                            curr_date = datetime.datetime.strptime(date,"%Y-%m-%d")
+                        elif first:
+                            first = False
+                        
+                        #if key == "Carbohydrates":
+                            #input([date,item,val])
+                        val += item
+                        
+                        #print("val:",val)
+                        
+                    except ValueError:
+                        #vals.append(item)
+                    
+                    #vals.append(item)
+                    #try:
                         item = item.replace('[','').replace(']','')
                         item = item.split(',')
-                        item[0] = int(item[0].strip())
+                        try:
+                            item = int(item[0].strip())
+                            vals.append(item)
+                        except ValueError:
+                            item = item[0]
+                            vals.append(item)
+                        #print(item)
                         #item[1] = int(item[1].strip())
-                        vals.append(item[0])
+                        #vals.append(item[0])
+                        #input(vals)
                     except AttributeError:
+                        input("a")
                         continue
                     except ValueError:
+                        input("v")
                         continue
+                    #except:
+                        #input(sys.exc_info()[0])
                     
+                    #if cnt == len(vals):
+                        #input([cnt,vals,dataframe[j],key])
+                    #print(j,dataframe[j],len(vals),vals)
                     
+                    #print(key,len(vals))
+                    #print(vals)
+                #input([len(dataframe),len(df_list[key])])
+                vals.append(val)
+                #input(vals[-1])
                 if data_index == -1 and demo and key == "Fat":
                     #input(df_list["Calories"])
-                    vals = [x*0.1 for x in vals]      
-        
+                    vals = [x*0.1 for x in vals]
+                #if key == "Date":
+                    #vals = sorted(list(set(vals)))
+                #if key == "Calories":
+                    #input(df_list["Calories"][-1])
+                    #input(vals[-1])
                 df_list[key] = vals
-                
                 #print(df_list["Fat"])
                 #input(df_list["Calories"])
+            #print(set(df_list["Date"]))
+            #input(df_list)
+            #input(df_list["Calories"][-1])
+            df_list["date"] = list(set(df_list["date"]))
+            df_list["date"].sort(key = lambda date: datetime.datetime.strptime(date, "%Y-%m-%d"))
             #input(df_list)  
             #key = "Fat"
             #fig, ax = plt.subplots()
@@ -4518,6 +5232,8 @@ def get_data_list(index_list,dataset,demo=False):
                 #plt.plot(df_list[key],linestyle='-',label=key)            
 
             #plt.legend()
+        
+   
         if dataset == "ActivFit":
             # Get dates of activity data readings
             ticks = []
@@ -4607,64 +5323,98 @@ def get_data_list(index_list,dataset,demo=False):
                 
             df_list["Step Count"] = data
             #input(data)
+        if dataset == "MyFitnessPalMeals" or dataset == "MyFitnessPal" or dataset == "SatFatDecrease":
+            if "Date" in df_list.keys():
+                df_list["date"] = df_list["Date"]
+                df_list.pop("Date")
+            if "meal" in df_list.keys():
+                df_list["Meal"] = df_list["meal"]
+                df_list.pop("meal")            
         df_lists.append(df_list)
         #avg_length += len(df_list["Step Count"])
         
     #input(avg_length/len(index_list))
     #input(df_lists[0]["Carbohydrates"])
-    if dataset == "MyFitnessPalMeals":
+    #if dataset == "MyFitnessPal":
+        #print(dataset)
+        #input(df_lists)
+
+    if (constraints or demo) and (dataset == "MyFitnessPalMeals" or dataset == "Energy Deficit" or dataset == "MyFitnessPal" or dataset == "SatFatDecrease"):
         for j in range(len(df_lists)):
             tmp = dict()
             total_list = []
-            cnt = {'Calories': 0, 'Carbohydrates': 0}
+            cnt = {'Calories': 0, 'Carbohydrates': 0, 'Fat' : 0, 'Protein' : 0, 'Saturated Fat' : 0}
             first = True
             sub_set = set([])
             meal_set = set(["Breakfast","Lunch","Dinner","Snacks"])
             prev_date = None
+            #input(df_lists[j]["date"])
             for i in range(len(df_lists[j]["date"])):
                 date = df_lists[j]["date"][i]
-                meal = df_lists[j]["Meal"][i]
+                meal = df_lists[j]["Meal"][i].capitalize()
+                #print(date,meal)
+
+                if meal == "Dinner-party":
+                    meal = "Dinner"
                 if data_index == -1 and demo:
                     carbs = 30
                 else:
                     carbs = df_lists[j]["Carbohydrates"][i]
                 calories = df_lists[j]["Calories"][i]
+                fats = df_lists[j]["Fat"][i]
+                protein = df_lists[j]["Protein"][i]
+                #input(df_lists[j].keys())
+                satfats = df_lists[j]["Saturated Fat"][i]
                 
                 if prev_date == None:
                     tmp[date] = dict()
                     prev_date = date
                     
+                #print(date,prev_date,carbs,calories)
+                
                 if date != prev_date and prev_date != None:
                     total_list.append(cnt)
                     
-                    
                     missing = list(meal_set - sub_set)
+                    
                     #input([tmp[prev_date],missing]) 
-                    for i in range(len(missing)):
-                        null_meal = missing[i]
+                    for k in range(len(missing)):
+                        null_meal = missing[k]
+                        
                         if data_index == -1 and demo:
                             tmp[prev_date][null_meal] = 30
                         else:
                             tmp[prev_date][null_meal] = dict()
                             tmp[prev_date][null_meal]["Calories"] = 0
                             tmp[prev_date][null_meal]["Carbohydrates"] = 0                            
+                            tmp[prev_date][null_meal]["Fat"] = 0    
+                            tmp[prev_date][null_meal]["Protein"] = 0                                
+                            tmp[prev_date][null_meal]["Saturated Fat"] = 0                            
                             #tmp[prev_date][null_meal] = 0
                         
+                    #input(tmp[prev_date])
                     sub_set = set([])       
                     tmp[date] = dict()
                     prev_date = date         
-                    cnt = {'Calories': 0, 'Carbohydrates': 0}
+                    cnt = {'Calories': 0, 'Carbohydrates': 0, 'Fat' : 0, 'Protein' : 0, 'Saturated Fat' : 0}
                                
                 tmp[date][meal] = dict()
                 tmp[date][meal]["Calories"] = calories
                 tmp[date][meal]["Carbohydrates"] = carbs
-                
+                tmp[date][meal]["Fats"] = fats
+                tmp[date][meal]["Protein"] = protein
+                tmp[date][meal]["Saturated Fats"] = fats
+                                
                 #input(tmp)
                     
                 #first = False
                 #cnt += carbs
                 cnt['Carbohydrates'] += carbs
                 cnt['Calories'] += calories
+                cnt['Fat'] += fats
+                cnt['Protein'] += protein
+                #input(cnt.keys())
+                cnt['Saturated Fat'] += fats
                 sub_set.add(meal)
               
             total_list.append(cnt)
@@ -4677,6 +5427,9 @@ def get_data_list(index_list,dataset,demo=False):
                 tmp[prev_date][null_meal] = dict()
                 tmp[prev_date][null_meal]["Calories"] = 0
                 tmp[prev_date][null_meal]["Carbohydrates"] = 0           
+                tmp[prev_date][null_meal]["Fat"] = 0           
+                tmp[prev_date][null_meal]["Protein"] = 0           
+                tmp[prev_date][null_meal]["Saturated Fats"] = 0           
             #tmp["Total"] = total_list
             #for key in tmp.keys():
                 #print(key, tmp[key])
@@ -4693,8 +5446,16 @@ def get_data_list(index_list,dataset,demo=False):
                         final_dict[subkey].append(tmp[key][subkey])
             final_dict["Total"] = total_list
             final_dict["date"] = dates
-            #input(final_dict)
-            df_lists[j] = [final_dict]
+            
+            if demo:
+                df_lists[j] = [final_dict]
+            elif constraints:
+                meal_set = set(df_lists[j]["Meal"])
+                meal_set.add("Total")
+                for meal in meal_set:
+                    df_lists[j][meal] = final_dict[meal]
+                #for meal.capitalize() in df_lists[j]["Meal"]:
+                    
         
     
         
@@ -4713,7 +5474,7 @@ def get_data_list(index_list,dataset,demo=False):
             #csvwriter.writerow([day_list[i],data_list[i],data_list2[i]])
     ##data_file.write("Calories")
     ##data_list = df_lists[0]["Calories"]
-    
+  
     ##data_file.close()
     #input()
     #print(df_list)
@@ -4764,8 +5525,7 @@ def create_database(sax_list,num_sax,letter_map_list,tw,alpha_sizes,prefix,weekd
             item_str = ""
             for k in range(len(sax_list)):
                 substr = sax_list[k][i:i+tw]
-                #print(weekday_list,index,letter_map_list,k,substr[j],alpha_sizes,k)
-                
+                #print(weekday_list,index,letter_map_list,k,substr[j],alpha_sizes)
                 item = str(weekday_list[index]) + str(letter_map_list[k][substr[j]] + alpha_sizes[k]*k)
 
                 item_str += item + " "
@@ -4812,7 +5572,7 @@ def parse_patterns(content,var="uni"):
         if len(content[i]) > 1:
             parsed_content.append(content[i])
             final_supports.append(supports[i])
-            
+    
     supports = final_supports
     # If multivariate, remove sequences that lead to univariate pattern summaries
     if var == "multi":
@@ -4893,14 +5653,14 @@ def get_patterns(sax_list,num_sax,letter_map_list,tw,alpha_sizes,prefix,path,cyg
     os.chdir(path)
     #input("back to path")
     
-    with open(path + "patterns.txt","r") as patterns_file:
+    with open("patterns.txt","r") as patterns_file:
         content = patterns_file.readlines()
-        
+            
     content = content[2:]
     var_ = "uni"
     if num_sax > 1:
         var_ = "multi"
-        
+                        
     content,supports = parse_patterns(content,var=var_)
     return num_seqs, content, supports
 
@@ -5042,7 +5802,7 @@ def reconstruct_pattern(pattern,weekday_list,character='-'):
     return orig
                     
 
-def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_dict,tw,alpha_sizes,prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,flag_=None,weekdays=None):
+def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_dict,tw,alpha_sizes,prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,flag_=None,weekdays=None,food_items=False):
     '''
     Inputs: 
     - attr_list: a list of summarizers
@@ -5072,7 +5832,11 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
         words = attr_list[i].split(' ')
         word_str = ""
         for j in range(len(words)):
-            word_str += words[j][0].lower() + words[j][1:]
+            try:
+                word_str += words[j][0].lower() + words[j][1:]
+            except IndexError:
+                print("analyzepatterns error")
+                input([words,j])
             if j != len(words)-1:
                 word_str += " "
                 
@@ -5096,6 +5860,7 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
         string_patterns.append(str_pattern)
     
     max_len = 0
+    #input(string_patterns)
     for pattern in string_patterns:
         if len(pattern) > max_len:
             max_len = len(pattern)
@@ -5207,6 +5972,22 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
     support_list = []
     numsum_list = []
     #input(freq_patterns)
+    if food_items: 
+        for i in range(len(freq_patterns)):
+            pattern_data = freq_patterns[i]
+            prefix = pattern_data[0]
+            suffix = pattern_data[1]   
+            
+            pattern = prefix+"-"+suffix
+            if pattern in string_patterns:
+                string_patterns.remove(pattern)
+            else:
+                pattern = prefix+"_"+suffix
+                
+            support = float(support_dict[pattern])/num_seqs
+            freq_patterns[i].append(support)
+        return freq_patterns
+    
     for p in range(len(freq_patterns)):
         pattern_data = freq_patterns[p]
         
@@ -5269,6 +6050,7 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
                             var_index = 1
                         else:
                             var_index = int(math.ceil(num/alpha_size))
+                            
                         letters1[var_index-1].append(alphabet[diff-1])
                     last_letter = ''
                 continue
@@ -5297,6 +6079,7 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
             if suffix[i] == ' ' or suffix[i] == '-' or suffix[i] == '_':
                 if suffix[i] == "_":
                     key_index += 1
+                #print([alpha_sizes,key_index])
                 alpha_size = alpha_sizes[key_index]
                 alphabet = alphabet_list[key_index]                
                 if len(last_letter) > 0:
@@ -5341,7 +6124,7 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
         for i in range(len(sax_list)):
             summarizers1.append([])
             summarizers2.append([])   
-
+            
         for i in range(len(letters1)):
             if len(letters1[i]) == 0:
                 continue
@@ -5361,7 +6144,6 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
             if len(letters2[i]) == 0:
                 continue            
             for j in range(len(letters2[i])):
-
                 if attr_list[i] == "Heart Rate" or attr_list[i] == "heart rate":
                     flag_ = "HR"
                 elif attr_list[i] in ['breakfast', 'lunch', 'dinner', 'total']:
@@ -5479,7 +6261,8 @@ def analyze_patterns(attr_list,sax_list,alphabet_list,letter_map_list,weekday_di
         numsum_list.append(num_summarizers)
         summary_list.append(summary)
         proto_cnt += 1      
-     
+    
+    #input(summary_list) 
     return summary_list, support_list, proto_cnt, numsum_list, result_summarizers
         
 def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,week_index=None):
@@ -5504,20 +6287,24 @@ def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,wee
     # Remove days that aren't part of a full week
     if len(chunked_sax[-1]) != len(chunked_sax[0]):
         chunked_sax.remove(chunked_sax[-1])
-        
+            
     if week_index == None:
         week_index = len(chunked_sax)-1
     elif week_index < 0:
         week_index += len(chunked_sax)
-    
+            
     # Sample size is fraction of dataset size
     sample_range = range(len(chunked_sax))
     divisor = 10
     flag = False
     
+    #input(chunked_sax)
+    
     while not flag: # TODO: this can be made easier 
-        sample_size = int(len(chunked_sax)/divisor)
-        #input(sample_size)
+        if not divisor:
+            break
+        
+        sample_size = int(float(len(chunked_sax))/divisor)
             
         # Calculate similarity threshold
         # (adapted from Squeezer: An efficient algorithm for clustering categorical data)
@@ -5528,6 +6315,7 @@ def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,wee
             indices = random.sample(sample_range,sample_size)
             
             data_sample = [chunked_sax[index] for index in indices]
+            #input(data_sample)
             
             for i in range(len(data_sample)):
                 for j in range(len(data_sample)):
@@ -5551,19 +6339,37 @@ def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,wee
                 
             avg_array.append(float(sum(sim_array))/len(sim_array))
             
-        
     thres = float(sum(avg_array))/len(avg_array) + 1
+    #thres = 0
     #input(thres)
     
     # Find relevant cluster
     clusters = squeezer(np.array(chunked_sax),thres)  
-    #input(len(clusters))
+    #print(clusters)
     
+    max_index = 0
+    for i in range(len(clusters)):
+        for j in range(len(clusters[i])):
+            if clusters[i][j] > max_index:
+                max_index = clusters[i][j]
+                
+    if max_index < week_index and week_index == len(tw_sax_list)-1:
+        week_index = max_index
+    
+    #print(max_index)
+    #print(week_index)
+    #input(clusters)
     cluster_data = None
     for cluster in clusters:
         if week_index in cluster:
             cluster_data = cluster
             break
+    #input(cluster_data)
+    if cluster_data == None:
+        #input(clusters)
+        return None
+
+    #print(week_index, clusters)
 
     # Remove TW of interest
     cluster_data.remove(week_index)
@@ -5572,15 +6378,23 @@ def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,wee
         return None
     
     indices = cluster_data
+    #input(indices)
     
     clusters = []    
     
     for j in range(len(tw_sax_list)):
         subclusters = []
         for i in range(len(cluster_data)):
-            if cluster_data[i]+1 >= len(cluster_data):
+            #input([cluster_data[i]+1,len(cluster)])
+            if cluster_data[i]+1 >= len(tw_sax_list[j]):
                 continue
-            subclusters.append([tw_sax_list[j][cluster_data[i]],tw_sax_list[j][cluster_data[i]+1]])
+            
+            try:
+                subclusters.append([tw_sax_list[j][cluster_data[i]],tw_sax_list[j][cluster_data[i]+1]])
+            except IndexError:
+                print("cluster index error")
+                input([tw_sax_list[j],cluster_data[i]])
+                
         
         if len(subclusters) != 0:
             clusters.append(subclusters)
@@ -5588,7 +6402,7 @@ def series_clustering(sax_rep,tw_sax_list,window_size,alpha_size=5,flag=None,wee
     if len(clusters) == 0:
         return None
     
-    return [clusters, indices]
+    return [clusters, indices, week_index]
 
 def standard_pattern_summary(first_letters,second_letters,attr_list,tw_index,singular_TW="week"):
     summarizer_type = "Standard Pattern"
@@ -5811,3 +6625,39 @@ def generateOWLTriples(ada_goal):
     
 def getSAX(data):
     pass
+
+def getTruthValue(summary,sax):
+    summarizer_map = {"very low" : "a",
+                      "low" : "b",
+                      "moderate" : "c",
+                      "high" : "d",
+                      "very high" : "e"}
+    sax_map = {1 : "a",
+               2 : "b",
+               3 : "c",
+               4 : "d",
+               5 : "e"}
+
+    if type(summary) is str:
+        summary = summary.split(' ')
+        
+    try:
+        q_index = summary.index("of")-1
+    except:
+        return 0.0
+        
+    quantifier = ' '.join(summary[q_index:q_index+3])        
+    summarizer = summary[-1].strip('.')
+    if summarizer not in summarizer_map.keys():
+        return 0.0
+        
+    letter = summarizer_map[summarizer]
+    try:
+        ratio = float(sax.count(letter))/len(sax)
+    except:
+        sax = sax.int()
+        sax = [sax_map[x.item()] for x in sax]
+        ratio = float(sax.count(letter))/len(sax)
+    
+    truth = round(get_muQ(quantifier,ratio),2) 
+    return max(float(truth),0.0)

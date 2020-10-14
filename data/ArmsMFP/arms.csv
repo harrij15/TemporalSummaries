@@ -1,0 +1,27 @@
+Participant,Attribute,Time Window,Protoform Type,Quantifier,Summarizer,Qualifier
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,SETW,,"high, very high"
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,SEsTW,some of the,"low, high"
+mfpfoodlog,Carbohydrate Intake|Calorie Intake,7,SEsTWQ,all of the,"moderate, very low",Calorie Intake
+mfpfoodlog,Calorie Intake|Carbohydrate Intake,7,SEsTWQ,all of the,"very high, very low",Carbohydrate Intake
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,EC,,"higher, higher",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,GC,,"better, better","low, low"
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,GE,some of the,"did not reach, reached","low, low"
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,ST,some of the,"increases, increases",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,CB,,"rose, dropped",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,SP,,"rose, stayed the same",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very high_;very high_very high_",7,IT,,very high_;very high_very high_,
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|low_;_high,high_",7,IT,,"low_;_high,high_",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very high,very high_;_very high_",7,IT,,"very high,very high_;_very high_",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|low_high_;_high_",7,IT,,low_high_;_high_,
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very low_moderate_;_moderate_",7,IT,,very low_moderate_;_moderate_,
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very low_low_;low_",7,IT,,very low_low_;low_,
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very high,Saturday_;very high,Sunday_very high,Sunday_",7,WIT,,"very high,Saturday_;very high,Sunday_very high,Sunday_",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|very high,very high,Saturday,Sunday_;_very high,Sunday_",7,WIT,,"very high,very high,Saturday,Sunday_;_very high,Sunday_",
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Wednesday",7,DB,some of the,"very low, low",Wednesday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Sunday",7,DB,some of the,"very high, very high",Sunday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Saturday",7,DB,almost none of the,"very low, very low",Saturday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Friday",7,DB,almost none of the,"very low, very low",Friday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Tuesday",7,DB,almost none of the,"very low, low",Tuesday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Thursday",7,DB,almost none of the,"very low, very low",Thursday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake|Monday",7,DB,almost none of the,"very low, very low",Monday
+mfpfoodlog,"Calorie Intake, Carbohydrate Intake",7,GA,,decrease_increase,
