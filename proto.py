@@ -35,6 +35,7 @@ if __name__ == "__main__":
     treatment = None
     path = "C:/Users/harrij15/Documents/GitHub/TemporalSummaries//" # Path for pattern data
     cygwin_path = r"C:\Apps\cygwin64\bin" # Path to Cygwin    
+    arm_filepath = "data/ArmsMFP/arms.csv"
         
     date_columns = { "Weather" : "DATE", 
                      "WeatherHourly" : "DATE",
@@ -354,6 +355,7 @@ if __name__ == "__main__":
             
             attr_list = key_dict[attr]             
             summary = None
+            pid = pid_list[df_index]
         
             # Try different combinations of attributes
             combos = []
@@ -381,6 +383,7 @@ if __name__ == "__main__":
                     sax_list = []
                     tw_sax_list = []
                     goals = None
+                    
                     
                     if attr == "StepUp":
                         goals = df_list["Baseline"]                  
@@ -442,7 +445,7 @@ if __name__ == "__main__":
                         continue
                                     
                     # Multivariate standard evaluation summaries (TW granularity)                     
-                    tw_summary, t3, coverage, t4, length, simplicity, first = generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=age,activity_level=activity_level)
+                    tw_summary, t3, coverage, t4, length, simplicity, first = generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=age,activity_level=activity_level,arm_filepath=arm_filepath,pid=pid)
                     if tw_summary != None:
                         print("Overall " + singular_TW + " summary (" + first.lower() + "granularity):", tw_summary)
                         print("Covering:", t3)
@@ -455,7 +458,7 @@ if __name__ == "__main__":
                                 
                     # Multivariate standard evaluation summaries (sTW granularity)
                     past_tw_list = [sax[start_day:end_day] for sax in sax_list]
-                    daily_summary, truth, t2, t3, coverage, t4, length, simplicity = generateSESTW(attr,key_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,start_day=start_day,end_day=end_day,age=age,activity_level=activity_level)
+                    daily_summary, truth, t2, t3, coverage, t4, length, simplicity = generateSESTW(attr,key_list,past_tw_list,letter_map_list,alpha,alpha_sizes,tw,TW,start_day=start_day,end_day=end_day,age=age,activity_level=activity_level,arm_filepath=arm_filepath,pid=pid)
                     
                     if daily_summary != None:
                         print("Day summary (daily granularity):", daily_summary)
@@ -475,7 +478,7 @@ if __name__ == "__main__":
                     else:
                         past_tw_list = [sax[start_day:end_day] for sax in sax_list]
                           
-                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, flag_ = generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,TW,age,activity_level)
+                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, flag_ = generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                     if summaries != None:
                         for j in range(len(summaries)):
                             
@@ -505,7 +508,7 @@ if __name__ == "__main__":
                             proto_cnt += 1   
                                 
                     # Multivariate evaluation comparison summaries           
-                    comparison_summary, t3, coverage, t4, length, simplicity = generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,age=age,activity_level=activity_level)
+                    comparison_summary, t3, coverage, t4, length, simplicity = generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,age=age,activity_level=activity_level,arm_filepath=arm_filepath,pid=pid)
                     if comparison_summary != None:
                         print("Standard evaluation comparison summary (" + singular_TW + "ly granularity): " + comparison_summary)
                         print("Covering:",t3)                                
@@ -517,7 +520,7 @@ if __name__ == "__main__":
                         proto_cnt += 1            
                          
                     # Multivariate goal comparison summaries
-                    comparison_summary, t3, coverage, t4, length, simplicity = generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,prev_start_day,start_day,end_day,age=age,activity_level=activity_level)
+                    comparison_summary, t3, coverage, t4, length, simplicity = generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,prev_start_day,start_day,end_day,age=age,activity_level=activity_level,arm_filepath=arm_filepath,pid=pid)
                     if comparison_summary != None:
                         
                         if singular_TW == "day":
@@ -541,7 +544,7 @@ if __name__ == "__main__":
                         else:
                             past_tw_list.append(data_list[i][start_day:end_day])
                             
-                    goal_summary, truth, t2, t3, coverage, t4, length, simplicity = generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,start_day=start_day,end_day=end_day,age=age,activity_level=activity_level)    
+                    goal_summary, truth, t2, t3, coverage, t4, length, simplicity = generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,start_day=start_day,end_day=end_day,age=age,activity_level=activity_level,arm_filepath=arm_filepath,pid=pid)    
                     if goal_summary != None:
                        
                         print("Goal evaluation summary:", goal_summary)
@@ -556,7 +559,7 @@ if __name__ == "__main__":
                         proto_cnt += 1  
     
                     # Standard trends summaries
-                    trend_summary, truth, t2, t3, coverage, t4, length, simplicity = generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,activity_level)
+                    trend_summary, truth, t2, t3, coverage, t4, length, simplicity = generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                     if trend_summary != None:
                         print("Standard trend summary:", trend_summary)
                         print("Truth value:", truth)
@@ -570,7 +573,7 @@ if __name__ == "__main__":
                         proto_cnt += 1      
                             
                     # Multivariate cluster-based pattern summaries
-                    cluster_summary, truth, t2, t3, coverage, t4, length, simplicity, tw_index, cluster_data, indices = generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level)
+                    cluster_summary, truth, t2, t3, coverage, t4, length, simplicity, tw_index, cluster_data, indices = generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                     if cluster_summary != None:
                         print("Cluster-based pattern summary:", cluster_summary)
                         print("Truth value:", truth)
@@ -584,7 +587,7 @@ if __name__ == "__main__":
                         proto_cnt += 1 
                                 
                         # Multivariate standard pattern summaries
-                        sp_summary, t3, coverage, t4, length, simplicity = generateSP(attr,key_list,cluster_data,tw_index,indices,letter_map_list,alpha_sizes,age,activity_level)
+                        sp_summary, t3, coverage, t4, length, simplicity = generateSP(attr,key_list,cluster_data,tw,tw_index,indices,letter_map_list,alpha_sizes,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                         if sp_summary != None:
                             
                             print("Standard pattern summary:", sp_summary)
@@ -597,7 +600,7 @@ if __name__ == "__main__":
                             proto_cnt += 1              
                                     
                     # Multivariate if-then pattern summaries
-                    summary_list, t1_list, t2_list, t3_list, coverage_list, length_list, simplicity_list, weekday_summaries, t1_list_, t2_list_, t3_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt = generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_dict,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,date_column,age,activity_level)
+                    summary_list, t1_list, t2_list, t3_list, coverage_list, length_list, simplicity_list, weekday_summaries, t1_list_, t2_list_, t3_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt = generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_dict,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,date_column,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                         
                     if summary_list != None:
                         print("If-then pattern summaries")
@@ -623,7 +626,7 @@ if __name__ == "__main__":
                                                                 
                              
                     # Multivariate general if-then pattern summaries
-                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level)
+                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,arm_filepath=arm_filepath,pid=pid)
                     
                     if summaries != None:
                         for i in range(len(summaries)):
@@ -639,7 +642,7 @@ if __name__ == "__main__":
                             proto_cnt += 1  
                                 
                     # Multivariate day-based pattern summaries       
-                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column)
+                    summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list = generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=arm_filepath,pid=pid)
                     if summaries != None:
                         for i in range(len(summaries)):
                             print("Day-based pattern summary:", summaries[i])
@@ -654,7 +657,7 @@ if __name__ == "__main__":
                             proto_cnt += 1                                                     
                                 
                     # Goal assistance summary  
-                    summary, length, simplicity = generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column)
+                    summary, length, simplicity = generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=arm_filepath,pid=pid)
                     if summary != None:
                         print("Goal assistance summary:", summary)
                         print()

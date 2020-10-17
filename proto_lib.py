@@ -18,6 +18,7 @@ from saxpy.znorm import znorm
 from saxpy.alphabet import cuts_for_asize
 import random   
 from squeezer import *
+import csv
 
 ####### GENERAL SUMMARY FUNCTIONS #######
 
@@ -59,6 +60,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
         if "temperature" in attr or attr == "Average Temperature" or "close value" in attr:
             weather_flag = True
     
+    #print(weather_flag)
     if weather_flag:
         particle = "the"
         sub_particle = "its"
@@ -531,15 +533,16 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             summarizers = summarizer_list[0][0]
             summarizers = summarizers.split(',')
             quantifier = summarizer_list[0][1]
-            attribute_list = attribute_list[0].split('|')
+            #print(attribute_list)
+            #attribute_list = attribute_list.split('|')
             for i in range(len(attribute_list)):
                 
                 attribute_list[i] = attribute_list[i].strip()
+                attribute_list[i] = attribute_list[i].strip('|')
                 #print(summarizer_list)
                 
                 
                 #input([summarizers,attribute_list])
-                #print(attribute_list[i])
                 summ_map[attribute_list[i].strip()] = summarizers[i].strip()
             qualifier_list = qualifier.split(',')
             
@@ -565,6 +568,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                         summary += " and "                  
             
             summary += ", when they had "
+            #print(qualifier_list, summ_map)
             for j in range(len(qualifier_list)):
                 summary += "a " + summ_map[qualifier_list[j].strip()].strip() + " " + qualifier_list[j].strip().lower()
                 if len(qualifier_list) == 1:
@@ -590,6 +594,9 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             attribute_list = attribute.split(',')     
             for i in range(len(summarizer_list)):
                 summarizers = summarizer_list[i][0]
+                indices = summarizer_list[i][1].split(',')
+                first_index = indices[0]
+                second_index = indices[1]                
                 
                 if ',' in summarizers:
                     summarizers = summarizers.split(',')
@@ -608,7 +615,13 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                                 summary += ","
                             
                             if j == len(summarizers)-2:
-                                summary += " and "   
+                                summary += " and " 
+                        else:
+                            if time_window == 7:
+                                pre_blurb = " in week "
+                            elif time_window == 30:
+                                pre_blurb = "in month " 
+                            summary += pre_blurb + str(first_index)                        
                 else:
                     if "about the same" in summarizers:
                         summarizers = "similar"                   
@@ -617,10 +630,16 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                         attribute_ = attribute_.lower()                        
                     summary += "a " + summarizers + " " + attribute_           
             #print(best_quantifier,attribute,summarizer_list)
+            pre_blurb = " than"
+            if summarizers == "about the same" or summarizers == "similar":
+                pre_blurb = " to what"
+                            
             if time_window == 7:
-                blurb = " than they did the week before"
+                #blurb = pre_blurb + " they did the week before"
+                blurb = pre_blurb + " they did in week " + str(second_index)
             elif time_window == 30:
-                blurb = " than they did the month before"              
+                #blurb = pre_blurb + " they did the month before"   
+                blurb = pre_blurb + " they did in month " + str(second_index)              
             summary += blurb + '.'             
             #input(summary)    
         elif proto_type == "GC":
@@ -629,6 +648,9 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
             qualifier_list = qualifier.split(',')
             for i in range(len(summarizer_list)):
                 summarizers = summarizer_list[i][0]
+                indices = summarizer_list[i][1].split(',')
+                first_index = indices[0]
+                second_index = indices[1]
                 
                 if ',' in summarizers:
                     summarizers = summarizers.split(',')
@@ -637,6 +659,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                         if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                             attribute_ = attribute_.lower()                            
                         summary += summarizers[j].strip() + " with keeping their " + attribute_ + " " + qualifier_list[j].strip()
+                        
                         if len(summarizers) == 1:
                             break
                         
@@ -645,17 +668,31 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                                 summary += ","
                             
                             if j == len(summarizers)-2:
-                                summary += " and "   
+                                summary += " and "  
+                        else:
+                            if time_window == 7:
+                                pre_blurb = " in week "
+                            elif time_window == 30:
+                                pre_blurb = "in month " 
+                            summary += pre_blurb + str(first_index)
                 else:
                     attribute_ = attribute_list[i].strip()
                     if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
                         attribute_ = attribute_.lower()                        
                     summary += summarizers + " with keeping their " + attribute_ + " " + qualifier.strip() 
             #print(best_quantifier,attribute,summarizer_list)
+            
+            pre_blurb = " as"
+            if summarizers == "better":
+                pre_blurb = " than"
+            
             if time_window == 7:
-                blurb = " than they did the week before"
+                #blurb = pre_blurb + " they did the week before"
+                blurb = pre_blurb + " they did in week " + str(second_index)
             elif time_window == 30:
-                blurb = " than they did the month before"              
+                #blurb = pre_blurb + " they did the month before"   
+                blurb = pre_blurb + " they did in month " + str(second_index)
+                
             summary += blurb + '.' 
         elif proto_type == "GE":
             summary = best_quantifier.capitalize() + " participants in " + group + " " 
@@ -1197,7 +1234,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
                 
     return ""
 
-def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=None,activity_level=None,arm_filepath=None,quick=False):
+def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,letter_map_list,alpha_sizes,tw,tw_sax,age=None,activity_level=None,arm_filepath=None,pid=None,quick=False):
     
     if quick:
         summaries, _ = get_single_SAX_summary(key_list,tw_sax,letter_map_list,alpha_sizes,singular_TW,tw_size=tw,past_tw=past_full_wks,age=age,activity_level=activity_level)
@@ -1240,15 +1277,16 @@ def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,le
             query_ = [["current index",[0]]] 
             tmp = []
             for item in tw_sax_list:
-                tmp.append(item[-1]) 
+                tmp.append(item[-1])  
                 
             t3, coverage = degree_of_covering(key_list,tmp,tw_summarizers,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
             t4 = degree_of_appropriateness(key_list,tmp,tw_summarizers,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)
             
-            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
-                with open(arm_filepath,"a",newline='') as csvfile:
-                    pid = pid_list[df_index]
+            if arm_filepath != None:
+                with open(arm_filepath,"w",newline='') as csvfile:
+                    #pid = pid_list[df_index]
                     datawriter = csv.writer(csvfile)
+                    datawriter.writerow(["Participant","Attribute","Time Window","Protoform Type","Quantifier","Summarizer","Qualifier"])
                     key_list_str = ""
                     summ_str = ""
                     for j in range(len(key_list)):
@@ -1267,7 +1305,7 @@ def generateSETW(attr,key_list,pid_list,singular_TW,past_full_wks,tw_sax_list,le
         return [None]*2    
     return [None]*7
 
-def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,food_items=False):
+def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,tw,TW,quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,pid=None,food_items=False):
     summarizer_type = "Past Daily TW - "
     if not food_items:
         for i in range(len(key_list)):
@@ -1312,21 +1350,18 @@ def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,qu
     if daily_summary != None:
         length = get_summary_length(len(summarizer_list))
         simplicity = get_simplicity(len(summarizer_list)+1)
-        
+        query_ = [["through",0,tw]]
         tmp = []
-        n = 0
         for item in sax_list:
-            n = len(item)
-            tmp.append(item)    
-        query_ = [["through",0,n]]
-        
+            tmp.append(item[0:tw]) 
+                    
         t2 = degree_of_imprecision(avg_list)
         t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_)
         t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level) 
         
-        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+        if arm_filepath != None:
             with open(arm_filepath,"a",newline='') as csvfile:
-                pid = pid_list[df_index]
+                #pid = pid_list[df_index]
                 datawriter = csv.writer(csvfile)
                 key_list_str = ""
                 summ_str = ""
@@ -1349,7 +1384,7 @@ def generateSESTW(attr,key_list,sax_list,letter_map_list,alpha,alpha_sizes,TW,qu
         return [None]*2    
     return [None]*8   
 
-def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,TW,age,activity_level,day_sax=None,arm_filepath=None,food_items=False,quick=False,goals=None,summarizer_type=None,constraint=False):
+def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,day_sax=None,arm_filepath=None,pid=None,food_items=False,quick=False,goals=None,summarizer_type=None,constraint=False):
     
     if summarizer_type is None:
         summarizer_type = "Past Daily TW w/ Qualifier- " 
@@ -1424,14 +1459,11 @@ def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alp
             
                 length = get_summary_length(len(summarizers_list))
                 simplicity = get_simplicity(len(summarizers_list)+len(flag_)+1)
-                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",0,7]]
+                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",0,tw]]
                                 
                 tmp = []
-                n = 0
                 for item in past_tw_list:
-                    n = len(item)
-                    tmp.append(item)    
-                query_ = [["qualifier",flag_,summarizers,alphabet_list],["through",0,7]]
+                    tmp.append(item[0:tw])
                     
                 #print(start_day,end_day)
                 #input(past_tw_list)
@@ -1452,9 +1484,9 @@ def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alp
     if len(summaries) == 0:
         return [None]*9
     
-    if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+    if arm_filepath != None:
         with open(arm_filepath,"a",newline='') as csvfile:
-            pid = pid_list[df_index]
+            #pid = pid_list[df_index]
             datawriter = csv.writer(csvfile)
             key_list_str = ""
             summ_str = ""
@@ -1488,7 +1520,7 @@ def generateSESTWQ(attr,key_list,past_tw_list,summarizer_7,start_day,end_day,alp
     
     return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, flag_]
                 
-def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,age=None,activity_level=None,arm_filepath=None):
+def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,age=None,activity_level=None,arm_filepath=None,pid=None):
     if ("Activity" not in key_list and tw_sax_list != None and len(tw_sax_list) != 0) or tw == 0.04:
         error = False
         summarizer_type = "Weekly " 
@@ -1511,7 +1543,8 @@ def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_l
                 summarizer_type += " and "    
         
         if not error:
-            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index,second_index,flag="eval")
+            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index+1,second_index+1,flag="eval")
+            
             if comparison_summary != None:
                 length = get_summary_length(len(summarizer_list))
                 simplicity = get_simplicity(len(summarizer_list)+1) 
@@ -1541,9 +1574,9 @@ def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_l
                 t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
                 t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)  
                 
-                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                if arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
-                        pid = pid_list[df_index]
+                        #pid = pid_list[df_index]
                         datawriter = csv.writer(csvfile)
                         key_list_str = ""
                         summ_str = ""
@@ -1559,15 +1592,16 @@ def generateEC(attr,key_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_l
                         for j in range(len(summarizer_list)):
                             summ_str += summarizer_list[j]
                             if j != len(summarizer_list)-1:
-                                summ_str += ", "         
-                                
-                        datawriter.writerow([pid,key_list_str,tw,'EC',None,summ_str,None])                
+                                summ_str += ", "     
+                                                       
+                        #print(first_index,second_index)         
+                        datawriter.writerow([pid,key_list_str,tw,'EC',str(first_index+1) + "," + str(second_index+1),summ_str,None])                
                 
                 return [comparison_summary, t3, coverage, t4, length, simplicity]
             
     return [None]*6
 
-def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,prev_start_day,start_day,end_day,age=None,activity_level=None,day_list=None,arm_filepath=None):
+def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alpha_sizes,letter_map_list,TW,tw,prev_start_day,start_day,end_day,age=None,activity_level=None,day_list=None,arm_filepath=None,pid=None):
     weather_flag = False
     for attr_ in attr_list:
         if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
@@ -1618,7 +1652,7 @@ def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alph
             if key_list[i] == "Heart Rate":
                 prev_tw_letters = [prev_tw_letters]
                 past_tw_letters = [past_tw_letters]
-            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index,second_index,age=age,activity_level=activity_level)
+            comparison_summary, summarizer_list, goal_list = comparison_TW_SAX_summary(summarizer_type,key_list,prev_tw_letters,past_tw_letters,TW,letter_map_list,first_index+1,second_index+1,age=age,activity_level=activity_level)
 
             if comparison_summary != None:
                 length = get_summary_length(len(summarizer_list))
@@ -1650,9 +1684,9 @@ def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alph
                 t3, coverage = degree_of_covering(key_list,tmp,summarizer_list,summarizer_type,letter_map_list,alpha_sizes,age,activity_level,query_list=query_,flag=flag_)
                 t4 = degree_of_appropriateness(key_list,tmp,summarizer_list,summarizer_type,t3,letter_map_list,alpha_sizes,age,activity_level)   
                 
-                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                if arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
-                        pid = pid_list[df_index]
+                        #pid = pid_list[df_index]
                         datawriter = csv.writer(csvfile)
                         key_list_str = ""
                         summ_str = ""
@@ -1672,13 +1706,13 @@ def generateGC(attr,attr_list,key_list,data_list,sax_list,tw_sax_list,alpha,alph
                             goal_str += goal_list[j]
                             if j != len(goal_list)-1:
                                 goal_str += ", "                                          
-                        datawriter.writerow([pid,key_list_str,tw,'GC',None,summ_str,goal_str])                
+                        datawriter.writerow([pid,key_list_str,tw,'GC',str(first_index+1) + "," + str(second_index+1),summ_str,goal_str])                  
                 
                 return [comparison_summary, t3, coverage, t4, length, simplicity]
             
     return [None]*6
 
-def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,goals=[None],quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,ada_goal=None):
+def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alpha,alpha_sizes,TW,goals=[None],quick=False,start_day=None,end_day=None,age=None,activity_level=None,arm_filepath=None,ada_goal=None,pid=None):
     weather_flag = False
     for attr_ in attr_list:
         if "temperature" in attr_ or attr_ == "Average Temperature" or "close value" in attr_:
@@ -1744,9 +1778,9 @@ def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alp
             simplicity = get_simplicity(len(summarizers)+1)
             t2 = degree_of_imprecision(avg_list)
             
-            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+            if arm_filepath != None:
                 with open(arm_filepath,"a",newline='') as csvfile:
-                    pid = pid_list[df_index]
+                    #pid = pid_list[df_index]
                     datawriter = csv.writer(csvfile)
                     key_list_str = ""
                     summ_str = ""
@@ -1777,7 +1811,7 @@ def generateGE(attr,attr_list,key_list,sax_list,past_tw_list,letter_map_list,alp
         return [None]*2    
     return [None]*8
 
-def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,activity_level,start_day=None,end_day=None,data_dict=None,arm_filepath=None,quick=False):
+def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,start_day=None,end_day=None,data_dict=None,arm_filepath=None,pid=None,quick=False):
     import pandas as pd
     if attr != "MyFitnessPalMeals":
         trend_lists = []
@@ -1838,9 +1872,9 @@ def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,
             simplicity = get_simplicity(len(summarizers))
             t2 = degree_of_imprecision(avg_list)
             
-            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+            if arm_filepath != None:
                 with open(arm_filepath,"a",newline='') as csvfile:
-                    pid = pid_list[df_index]
+                    #pid = pid_list[df_index]
                     datawriter = csv.writer(csvfile)
                     key_list_str = ""
                     summ_str = ""
@@ -1864,7 +1898,7 @@ def generateST(attr,key_list,data_list,letter_map_list,alpha_sizes,alpha,TW,age,
         return [None]*2
     return [None]*8
 
-def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=None,quick=False,week_index=None,constraint=False):
+def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_list,letter_map_list,alpha_sizes,alpha,tw,TW,age,activity_level,arm_filepath=None,pid=None,quick=False,week_index=None,constraint=False):
     #tmp = []
     #for sublist in tw_sax_list:
         #if len(sublist) == tw:
@@ -1936,7 +1970,7 @@ def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_li
                 summary_data = summary_data_list[i]
                 
                 attribute_ = key_list[i]
-                if "close value" not in attribute_:
+                if not temp_flag:
                     attribute_ = attribute_.lower()                                
                 extension += " your " + attribute_ + " was"
                 for letter in summary_data:
@@ -1987,7 +2021,7 @@ def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_li
                         sublist.append(tmp)
                     indices_.append(sublist)
                     
-                #input(tw_sax_list)
+                #input(len(tw_sax_list))
                 #if len(tw_sax_list) == 1:
                     #indices_ = indices_[0]
                 #input(indices_)
@@ -2003,9 +2037,9 @@ def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_li
                 simplicity = get_simplicity(num_summarizers+1)
                 t2 = degree_of_imprecision(avg_list)
                 
-                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                if arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
-                        pid = pid_list[df_index]
+                        #pid = pid_list[df_index]
                         datawriter = csv.writer(csvfile)
                         key_list_str = ""
                         summ_str = ""
@@ -2030,7 +2064,7 @@ def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_li
         return [None]*2
     return [None]*11
 
-def generateSP(attr,key_list,cluster_data,tw_index,indices_,letter_map_list,alpha_sizes,age,activity_level,arm_filepath=None,quick=False):
+def generateSP(attr,key_list,cluster_data,tw,tw_index,indices_,letter_map_list,alpha_sizes,age,activity_level,arm_filepath=None,pid=None,quick=False):
     if cluster_data != None:
         
         summarizer_type = "Pattern Recognition - " 
@@ -2065,9 +2099,9 @@ def generateSP(attr,key_list,cluster_data,tw_index,indices_,letter_map_list,alph
         length = get_summary_length(num_summarizers)
         simplicity = get_simplicity(num_summarizers+1)
         
-        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+        if arm_filepath != None:
             with open(arm_filepath,"a",newline='') as csvfile:
-                pid = pid_list[df_index]
+                #pid = pid_list[df_index]
                 datawriter = csv.writer(csvfile)
                 key_list_str = ""
                 summ_str = ""
@@ -2090,7 +2124,7 @@ def generateSP(attr,key_list,cluster_data,tw_index,indices_,letter_map_list,alph
     
     return [None]*6
 
-def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_dict,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,date_column,age,activity_level,hr_sax=None):
+def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_dict,alpha_sizes,db_fn_prefix,path,cygwin_path,min_conf,min_sup,proto_cnt,date_column,age,activity_level,hr_sax=None,arm_filepath=None,pid=None):
     if tw > 0.04:
         summarizer_type = "If-then pattern "
         for i in range(len(key_list)):
@@ -2150,6 +2184,42 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
                 length_list.append(numsum_list[i])
                 simplicity_list.append(numsum_list[i]+1)
                 
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    #pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    #summ_str = ""
+                    goal_str = ""
+                    index_list = []
+                    
+                    summ_str = ""
+                    item = summarizers_list[i]
+                    for k in range(len(item)):
+                        subitem = item[k]
+                        for j in range(len(subitem)):
+                            subsubitem = subitem[j]
+                            for m in range(len(subsubitem)):
+                                summ = subsubitem[m]
+                                summ_str += summ
+                                if m != len(subsubitem)-1:
+                                    summ_str += ","
+                            if len(summ_str)>0 and summ_str[-1] != "_":
+                                #input([j,len(subitem)])
+                                summ_str += "_"
+                        if k != len(item)-1:
+                            #summ_str = summ_str.strip('_')
+                            summ_str += ";"                                        
+                
+                
+                    for j in range(len(key_list)):
+                        key_list_str += key_list[j]
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+                        
+                    
+                        
+                    datawriter.writerow([pid,key_list_str+'|'+summ_str,tw,'IT',None,summ_str,None])                
+                
             for i in range(len(weekday_summaries)):
                 
                 summ_index = 0
@@ -2169,6 +2239,41 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
                 coverage_list_.append(degree_of_coverage(supports_[i]))
                 length_list_.append(numsum_list_[i])
                 simplicity_list_.append(numsum_list_[i]+1) 
+                
+                with open(arm_filepath,"a",newline='') as csvfile:
+                    #pid = pid_list[df_index]
+                    datawriter = csv.writer(csvfile)
+                    key_list_str = ""
+                    #summ_str = ""
+                    goal_str = ""
+                    index_list = []
+                    
+                    summ_str = ""
+                    item = summarizers_list_[i]
+
+                    for k in range(len(item)):
+                        subitem = item[k]
+                        for j in range(len(subitem)):
+                            subsubitem = subitem[j]
+                            for m in range(len(subsubitem)):
+                                summ = subsubitem[m]
+                                summ_str += summ
+                                if m != len(subsubitem)-1:
+                                    summ_str += ","
+                            if len(summ_str)>0 and summ_str[-1] != "_":
+                                #input([j,len(subitem)])
+                                summ_str += "_"
+                        if k != len(item)-1:
+                            #summ_str = summ_str.strip('_')
+                            summ_str += ";"                                        
+                
+                
+                    for j in range(len(key_list)):
+                        key_list_str += key_list[j]
+                        if j != len(key_list)-1:
+                            key_list_str += ", "
+                        
+                    datawriter.writerow([pid,key_list_str+'|'+summ_str,tw,'WIT',None,summ_str,None])                
             
             return [summary_list, t1_list, t2_list, t3_list, coverage_list, length_list, simplicity_list, weekday_summaries, t1_list_, t2_list_, t3_list_, coverage_list_, length_list_, simplicity_list_, proto_cnt]
         
@@ -2176,7 +2281,7 @@ def generateIT(attr,key_list,sax_list,alphabet_list,letter_map_list,tw,weekday_d
     output[-1] = proto_cnt
     return output
   
-def generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,arm_filepath=None):
+def generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,arm_filepath=None,pid=None):
     if tw > 0 and attr != "MyFitnessPalMeals":
         summarizer_type = "Past Daily TW - Generalized If-Then "
         for i in range(len(key_list)):
@@ -2243,46 +2348,45 @@ def generateGIT(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alph
                         length_list.append(length)
                         simplicity_list.append(simplicity)
                         
-        if len(summaries) != 0:
-            if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
-                with open(arm_filepath,"a",newline='') as csvfile:
-                    pid = pid_list[df_index]
-                    datawriter = csv.writer(csvfile)
-                    key_list_str = ""
-                    summ_str = ""
-                    flag_str = ""
-                    q_str = ""
-                    index_list = []
-                    for j in range(len(key_list)):
-                        if key_list[j] in flag_:
-                            continue
+                        if arm_filepath != None and summary != None:
+                            with open(arm_filepath,"a",newline='') as csvfile:
+                                #pid = pid_list[df_index]
+                                datawriter = csv.writer(csvfile)
+                                key_list_str = ""
+                                summ_str = ""
+                                flag_str = ""
+                                q_str = ""
+                                index_list = []
+                                for j in range(len(key_list)):
+                                    if key_list[j] in flag_:
+                                        continue
+                                    
+                                    key_list_str += key_list[j]
+                                    index_list.append(j)
+                                    if j != len(key_list)-1:
+                                        key_list_str += ", "
+                                  
+                                        
+                                for j in range(len(flag_)):
+                                    flag_str += flag_[j]
+                                    j_ = key_list.index(flag_[j])
+                                    index_list.append(j_)
+                                    if j != len(flag_)-1:
+                                        flag_str += ", "      
+                                        
+                                for j in range(len(index_list)):
+                                    index_ = index_list[j]
+                                    summ_str += summarizers[index_]
+                                    if j != len(index_list)-1:
+                                        summ_str += ", "    
+                                        
+                                datawriter.writerow([pid,key_list_str.strip(', ')+"|"+flag_str.strip(', '),tw,'GIT',quantifier_list[index],summ_str,flag_str])            
                         
-                        key_list_str += key_list[j]
-                        index_list.append(j)
-                        if j != len(key_list)-1:
-                            key_list_str += ", "
-                      
-                            
-                    for j in range(len(flag_)):
-                        flag_str += flag_[j]
-                        j_ = key_list.index(flag_[j])
-                        index_list.append(j_)
-                        if j != len(flag_)-1:
-                            flag_str += ", "      
-                            
-                    for j in range(len(index_list)):
-                        index_ = index_list[j]
-                        summ_str += summarizers[index_]
-                        if j != len(index_list)-1:
-                            summ_str += ", "    
-                            
-                    datawriter.writerow([pid,key_list_str.strip(', ')+"|"+flag_str.strip(', '),tw,'GIT',quantifier_list[index],summ_str,flag_str])            
-            
-            return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list]
-                        
+                        return [summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list]
+                                        
         return [None]*8
 
-def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None,quick=False,goals=None,constraint=False):
+def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None,pid=None,quick=False,goals=None,constraint=False):
     weekdays = list(set(date_column))
     summaries, truth_list, t2_list, t3_list, coverage_list, t4_list, length_list, simplicity_list, avg_list_, summarizer_lists = [], [], [], [], [], [], [], [], [], []
     #input(weekdays)
@@ -2374,9 +2478,9 @@ def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha
             
     if len(summaries) != 0:
         
-        if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+        if arm_filepath != None:
             with open(arm_filepath,"a",newline='') as csvfile:
-                pid = pid_list[df_index]
+                #pid = pid_list[df_index]
                 datawriter = csv.writer(csvfile)
                 key_list_str = ""
                 summ_str = ""
@@ -2401,7 +2505,7 @@ def generateDB(attr,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha
                         
     return [None]*8
 
-def generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None):
+def generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alpha,alpha_sizes,letter_map_list,alphabet_list,tw,TW,age,activity_level,date_column,arm_filepath=None,pid=None):
     if tw > 0 and attr != "MyFitnessPalMeals":
         last_weeks = dict()
         for key in key_list:
@@ -2450,9 +2554,9 @@ def generateGA(attr,df_list,key_list,sax_list,summarizer_7,start_day,end_day,alp
                 length = get_summary_length(num_summarizers)
                 simplicity = get_simplicity(num_summarizers)
                 
-                if attr in ["Calorie Intake","Carbohydrate Intake","MyFitnessPal","StepUp","Step Count"] and arm_filepath != None:
+                if arm_filepath != None:
                     with open(arm_filepath,"a",newline='') as csvfile:
-                        pid = pid_list[df_index]
+                        #pid = pid_list[df_index]
                         datawriter = csv.writer(csvfile)
                         key_list_str = ""
                         summ_str = ""
@@ -2808,7 +2912,7 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
     Purpose: To find and return the membership function value of the summarizer
     based on the inputted value and the summarizer type
     """     
-    #print(summarizer_type)
+    #input(summarizer_type)
     #input(attr)
     #input(value)
     #print("here",goal_,summarizer_type)
@@ -2921,6 +3025,7 @@ def get_muS(attr,summarizer_type,summarizer,value,letter_map,alpha_size,age=None
                     return not (percentage >= 25 and percentage <= 35)
                 if fat:
                     return not (percentage >= 15 and percentage <= 25)
+        #print(evaluateSAX(value,letter_map,alpha_size),summarizer)
         return int(evaluateSAX(value,letter_map,alpha_size) == summarizer)
     elif "Pattern Recognition" in summarizer_type:
         #print(value)
@@ -3455,16 +3560,22 @@ def comparison_TW_SAX_summary(summarizer_type,attr_list,prev_letters,curr_letter
     else:
         identifier = "it was"
     
+    
     if flag == "eval":
         summary = ""
         particle = "your"
         weather_flag = False
+        stock_flag = False
         for attr in attr_list:
-            if "close value" in attr:
+            if "Wind Speed" in attr or "Temperate" in attr:
                 weather_flag = True
                 break
+            if "close value" in attr:
+                stock_flag = True
+                break
         
-        if weather_flag:
+        #print(weather_flag, attr)
+        if weather_flag or stock_flag:
             particle = "the"
         for i in range(len(attr_list)):
             if i == 0:
@@ -3473,7 +3584,7 @@ def comparison_TW_SAX_summary(summarizer_type,attr_list,prev_letters,curr_letter
                 first = particle + " "
                 
             attribute_ = attr_list[i]
-            if not weather_flag:
+            if not stock_flag:
                 attribute_ = attribute_.lower()            
                 
             summary += first + attribute_ + " was " + summarizer_list[i] 
@@ -4302,7 +4413,6 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
         #n = len(data_list)
         
     #print(n)
-    #print(data_list)
     
     for i in range(n):
 
@@ -4311,7 +4421,7 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
         for j in range(len(summarizers)):
             muS = None
             #if flag == "comparePR":
-            #print(flag)
+                
             
             if flag == "compare":
                 #print(flag)
@@ -4321,7 +4431,11 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
 
                 #if i == skip_index or ("Pattern Recognition" in summarizer_type and (i+1)%2==0):
                 if i == skip_index and "Pattern Recognition" not in summarizer_type:
-                    continue                
+                    continue
+                
+                #print(j,i)
+                #print(data_list)
+                
                 
                 if "Pattern Recognition" in summarizer_type:
                     first_letter = data_list[j][i][0]
@@ -4354,8 +4468,8 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                     
             elif flag == "compareHR":
                 
-                #if i == 0:
-                    #continue
+                if i == 0:
+                    continue
                 #print(i)
                 #if i%7 != 0 or i < 7:
                     #muS = None
@@ -4377,13 +4491,14 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                 #conclusion = compare_HR_TW(last_tw,curr_tw,age,activity_level)
                 summary, conclusion, goal_list = comparison_TW_SAX_summary(summarizer_type,attr_list,last_tw,curr_tw,TW,letter_map_list,i-1,i,flag="eval")
                 #print(summary,conclusion,goal_list)
-                conclusion_map = { 'lower' : 'dropped',
-                                   'higher' : 'rose',
-                                   'about the same' : 'stayed the same'}
+                #conclusion_map = { 'lower' : 'dropped',
+                                   #'higher' : 'rose',
+                                   #'about the same' : 'stayed the same'}
                 
                 #input([conclusion,summarizers[j]])
                 #print(conclusion[j],summarizers[j])
-                if conclusion_map[conclusion[j]] == summarizers[j]:
+                #if conclusion_map[conclusion[j]] == summarizers[j]:
+                if conclusion[j] == summarizers[j]:
                     muS = 1
                 else:
                     muS = 0
@@ -4440,11 +4555,12 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                     except:
                         goal = goals[j]
                 #print(i,goal)
-                #print(data_list)
+                #print(data_list[j][i], summarizer_type)
                 muS = get_muS(attr_list[j],summarizer_type,summarizers[j],data_list[j][i],letter_map_list[j],alpha_sizes[j],goal_=goal) 
                 #print(muS, summarizers[j])
             #print(muS_list)
             muS_list.append(muS)
+        #input(muS_list)
         #print(query_list)
         if query_list == None:
             muWg = 1
@@ -4716,6 +4832,7 @@ def degree_of_appropriateness(attr_list,data_list,summarizers,summarizer_type,t3
                                 goal = goals[j]           
                 
                 #print(curr_data)
+                #print(summarizer_type)
                 #print(summarizer_type,summarizer,flag,goal,curr_data)
                 #input(get_muS(attr_list[j],summarizer_type,summarizer,curr_data,letter_map_list[j],alpha_sizes[j],flag=flag,goal_=goal))
                 if get_muS(attr_list[j],summarizer_type,summarizer,curr_data,letter_map_list[j],alpha_sizes[j],flag=flag,goal_=goal):
