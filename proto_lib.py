@@ -308,7 +308,7 @@ def get_protoform(summarizer_type,attr_list,best_quantifier,summarizer_list,TW="
         summary += " from one " + timeframe + " to the next."
         return summary
     elif "Pattern Recognition" in summarizer_type:
-        summary = "During " + str(best_quantifier) + " " + TW + " similar to week " + str(tw_index) + ","
+        summary = "During " + str(best_quantifier) + " " + TW + " similar to week " + str(tw_index+1) + ","
         for i in range(len(attr_list)):
             attribute_ = attr_list[i]
             if "close value" not in attribute_: #and "temperature" not in attribute_ and attribute_ != "Average Temperature":
@@ -1959,18 +1959,23 @@ def generateCB(attr,attr_list,key_list,full_sax_rep,tw_sax_list,sax_list,data_li
             last_summarizer = ""
             num_summarizers = 0
             temp_flag = False
+            stock_flag = False
             if type(attr_list) is list:
                 for j in range(len(attr_list)):
                     if "temperature" in attr_list[j] or attr_list[j] == "Average Temperature":
                         temp_flag = True
+                    if "close value" in attr_list[j]:
+                        stock_flag = True
             else:
                 if "temperature" in attr_list or attr_list == "Average Temperature":
-                    temp_flag = True                            
+                    temp_flag = True       
+                if "close value" in attr_list[j]:
+                    stock_flag = True                            
             for i in range(len(key_list)):
                 summary_data = summary_data_list[i]
                 
                 attribute_ = key_list[i]
-                if not temp_flag:
+                if not temp_flag and not stock_flag:
                     attribute_ = attribute_.lower()                                
                 extension += " your " + attribute_ + " was"
                 for letter in summary_data:
@@ -4468,8 +4473,8 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                     
             elif flag == "compareHR":
                 
-                if i == 0:
-                    continue
+                #if i == 0:
+                    #continue
                 #print(i)
                 #if i%7 != 0 or i < 7:
                     #muS = None
@@ -4497,8 +4502,7 @@ def degree_of_covering(attr_list,data_list,summarizers,summarizer_type,letter_ma
                 
                 #input([conclusion,summarizers[j]])
                 #print(conclusion[j],summarizers[j])
-                #if conclusion_map[conclusion[j]] == summarizers[j]:
-                if conclusion[j] == summarizers[j]:
+                if conclusion_map[conclusion[j]] == summarizers[j]:
                     muS = 1
                 else:
                     muS = 0
