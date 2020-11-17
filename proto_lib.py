@@ -137,7 +137,7 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
         if heart_goal:
             axes[0].plot([70]*(len(data_list[0])+1),color='Red')
             axes[0].plot([110]*(len(data_list[0])+1),color='Red')
-        else:
+        elif "Calorie Intake" in key_list::
             axes[0].plot([2000]*(len(data_list[0])+1),color='Red')
         
     for i in range(len(axes)):
