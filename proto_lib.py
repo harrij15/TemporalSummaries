@@ -132,12 +132,12 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
     #plt.grid()
     colors = ['xkcd:cerulean','xkcd:violet']
     locs = ["lower left", "lower right"]
-    
+    #input()
     if showgoal:
         if heart_goal:
             axes[0].plot([70]*(len(data_list[0])+1),color='Red')
             axes[0].plot([110]*(len(data_list[0])+1),color='Red')
-        elif "Calorie Intake" in key_list::
+        elif "Calorie Intake" in key_list:
             axes[0].plot([2000]*(len(data_list[0])+1),color='Red')
         
     for i in range(len(axes)):
@@ -149,6 +149,7 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
         complete_color = False
         cnt = 0
         label_set = set()
+        #input(indices)
         for j in range(len(data)):
             color = colors[i]
             label = None
@@ -193,12 +194,16 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
                 
             if j != len(data)-1:
                 #print(j,j+1,data[j],data[j+1],color)
-                ax.plot([j,j+1],[data[j],data[j+1]],color=color,label=label,linewidth=5,marker='o',markersize=10)
+                #input(color)
+                #ax.plot([j,j+1],[data[j],data[j+1]],color=color,label=label,linewidth=5,marker='o',markersize=10)
+                ax.plot([j,j+1],[data[j],data[j+1]],color=color,label=label,linewidth=3)
             else:
                 #print(j)
                 if indices != None and j in indices and multicolor:
                     color = 'xkcd:red orange'
-                ax.plot([j],[data[j]],color=color,label=label,linewidth=5,marker='o',markersize=10)
+                #input(color)
+                #ax.plot([j],[data[j]],color=color,label=label,linewidth=5,marker='o',markersize=10)
+                ax.plot([j],[data[j]],color=color,label=label,linewidth=3)
             
             if complete_color == True:
                 index = j
@@ -206,7 +211,8 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
                     index = j-1
                 #print(index,indices[len(indices)-1])
                 if not (trailing and index not in indices):
-                    ax.plot([index],[data[index]],color='xkcd:red orange',label=None,linewidth=5,marker='o',markersize=10)
+                    #ax.plot([index],[data[index]],color='xkcd:red orange',label=None,linewidth=5,marker='o',markersize=10)
+                    ax.plot([index],[data[index]],color='xkcd:red orange',label=None,linewidth=3,marker='o',markersize=5)
                 #else:
                     #print(index,data[index])
                 complete_color = False
