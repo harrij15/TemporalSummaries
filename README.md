@@ -87,6 +87,9 @@ A subset of multivariate summaries for Apple and Aetna are shown below. Please n
 | If-Then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
 | Day-Based Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
+<p align="center">
+  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aapl_data.png" height="350" weight="350"/>
+</p>
 
 ## References
 1. Jessica Lin, Eamonn J. Keogh, Li Wei, and Stefano Lonardi. 2007. Experiencing SAX: A Novel Symbolic Representation of Time Series. Data Min. Knowl. Discov. 15 (08 2007), 107-144
