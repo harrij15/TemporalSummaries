@@ -96,7 +96,7 @@ We can display the AAPL and AET close value data as:
 </p> 
 
 <p align="center"> 
-<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_data.png" height="350" weight="200"/>
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_data.png" height="250" weight="100"/>
 </p> 
 
 ## References
