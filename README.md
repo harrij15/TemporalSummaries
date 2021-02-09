@@ -8,6 +8,7 @@
 - Attribute (A): A variable of interest in the database
 - Time window (TW): A time window of interest
 - Sub-time window (sTW): A time window at a smaller granularity than the specified time window
+- Qualifier (R): A word or phrase that adds specificity to the summary
 
 ## Framework
 
@@ -34,7 +35,7 @@ Below is a table of the current list of protoforms our system uses to generate s
 |:---------------------:|:-------------:| 
 | Standard Evaluation (TW)  | In the past full TW, your A<sub>1</sub> has been S<sub>1</sub>,..., and your A<sub>n</sub> has been S<sub>n</sub>. | 
 | Standard Evaluation (sTW)   | On Q sTW in the past TW, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
-| Standard Evaluation (sTW w/ qualifier)   | On Q sTW in the past TW L, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
+| Standard Evaluation (sTW w/ qualifier)   | On Q sTW in the past TW R, your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub>. | 
 | Comparison            | Your A<sub>1</sub> was S<sub>1</sub>,..., and your A<sub>n</sub> was S<sub>n</sub> on TW<sub>1</sub> N<sub>1</sub> than they were on TW<sub>2</sub> N<sub>2</sub>. |  
 | Goal Comparison            | You did S<sub>1</sub> overall with keeping your A<sub>1</sub> G<sub>1</sub>,..., and you did S<sub>n</sub> overall with keeping your A<sub>n</sub> G<sub>n</sub> in TW<sub>1</sub> N<sub>1</sub> than you did in TW<sub>2</sub> N<sub>2</sub>. |   
 | Goal Evaluation       | On Q sTW in the past TW, you S<sub>1</sub> your goal to keep your A<sub>1</sub> G<sub>1</sub>,..., and you S<sub>n</sub> your goal to keep your A<sub>n</sub> G<sub>n</sub>.      |    
@@ -49,7 +50,7 @@ Below is a table of the current list of protoforms our system uses to generate s
 | Population Evaluation | Q<sub>1</sub> users in this study had a S<sub>1</sub> A<sub>1</sub>, a S<sub>2</sub> A<sub>2</sub>, ..., and a S<sub>n</sub> A<sub>n</sub> P.     |  
 
 
-where S denotes a summarizer, Q is a quantifier, L is a qualifier, A is an attribute, G is a goal, D is a day of the week, C is a confidence value, TW is a time window, sTW is a sub-time window, N is a time window index, and P is a sub-protoform.
+where S denotes a summarizer, Q is a quantifier, R is a qualifier, A is an attribute, G is a goal, D is a day of the week, C is a confidence value, TW is a time window, sTW is a sub-time window, N is a time window index, and P is a sub-protoform.
 
 
 ## Setup
