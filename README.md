@@ -88,7 +88,7 @@ A subset of multivariate summaries for Apple and Aetna are shown below. Please n
 | Day-Based Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
 <p align="center">
-  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aapl_data.png" height="350" weight="350"/>
+  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/apple_data.png" height="350" weight="350"/>
 </p>
 
 ## References
