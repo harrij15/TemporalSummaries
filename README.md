@@ -99,6 +99,16 @@ We can display the AAPL and AET close value data as:
 <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_data.png" height="250" weight="100"/>
 </p> 
 
+We can display the pattern found for the 'Standard Evaluation (daily granularity)' summary:
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/apple_sestw.png" height="250" weight="100"/> 
+</p> 
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_sestw.png" height="250" weight="100"/>
+</p> 
+
 ## References
 1. Jessica Lin, Eamonn J. Keogh, Li Wei, and Stefano Lonardi. 2007. Experiencing SAX: A Novel Symbolic Representation of Time Series. Data Min. Knowl. Discov. 15 (08 2007), 107-144
 2. Romel Torres. 2019. Alpha Vantage. https://github.com/RomelTorres/alpha_vantage.
