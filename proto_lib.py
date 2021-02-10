@@ -303,9 +303,16 @@ def show_provenance(key_list,data_list,tw,heat_map_list,indices=None,multicolor=
             axes[1].bar(len(data_list[0]),right_map[key]['max']-right_map[key]['min'],bottom=right_map[key]['min'])    
 
     plt.xlim(-2,len(data_list[0])+0.5)
-    axes[0].set_ylim(bottom=0) 
+    
+    bottom_min = min(data_list[0])
+    if len(data_list) > 1:
+        for i in range(1,len(data_list)):
+            if min(data_list[i]) < bottom_min:
+                bottom_min = min(data_list[i])
+                
+    axes[0].set_ylim(bottom=bottom_min-10) 
     if len(axes) > 1:
-        axes[1].set_ylim(bottom=0)   
+        axes[1].set_ylim(bottom=bottom_min-10)   
     
     #plt.rc('axes', titlesize=40)
     #fig.tight_layout()
