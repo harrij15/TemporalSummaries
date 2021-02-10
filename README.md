@@ -99,7 +99,7 @@ We can display the AAPL and AET close value data as:
 <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_data.png" height="250" weight="100"/>
 </p> 
 
-We can display the pattern found for the 'Standard Evaluation (daily granularity)' summary:
+We display the pattern found for the 'Standard Evaluation (daily granularity)' summary below:
 
 <p align="center"> 
 <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aapl_sestw.png" height="250" weight="100"/> 
