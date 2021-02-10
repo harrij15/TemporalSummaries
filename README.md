@@ -87,9 +87,27 @@ A subset of multivariate summaries for Apple and Aetna are shown below. Please n
 | If-Then Pattern       | There is 100% confidence that, when your AAPL close value follows the pattern of being high, your AET close value tends to be high, then high the next day. |
 | Day-Based Pattern       | The AAPL close value tends to be very high and the AET close value tends to be very high on Thursdays. |
 
-<p align="center">
-  <img src="https://github.com/harrij15/TemporalSummaries/blob/master/aapl_data.png" height="350" weight="350"/>
-</p>
+We are also able to automatically display the patterns we find in the data in generated time-series charts. The horizontal bars in the following charts represent vertical range corresponding to different summarizers. Starting from the bottom, the ranges determine whether a data point is either "very low" (blue), "low" (yellow), "moderate" (green), "high" (red), or "very high" (purple). For example, if a data point is within the blue range, it will be described as "very low."
+
+We can display the AAPL and AET close value data as:
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/apple_data.png" height="250" weight="100"/> 
+</p> 
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_data.png" height="250" weight="100"/>
+</p> 
+
+We can display the pattern found for the 'Standard Evaluation (daily granularity)' summary:
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aapl_sestw.png" height="250" weight="100"/> 
+</p> 
+
+<p align="center"> 
+<img src="https://github.com/harrij15/TemporalSummaries/blob/master/aet_sestw.png" height="250" weight="100"/>
+</p> 
 
 ## References
 1. Jessica Lin, Eamonn J. Keogh, Li Wei, and Stefano Lonardi. 2007. Experiencing SAX: A Novel Symbolic Representation of Time Series. Data Min. Knowl. Discov. 15 (08 2007), 107-144
